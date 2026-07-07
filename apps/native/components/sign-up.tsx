@@ -39,7 +39,7 @@ function getErrorMessage(error: unknown): string | null {
     return null;
   }
 
-  if (typeof error === "object" && error !== null) {
+  if (typeof error === "object") {
     const maybeError = error as { message?: unknown };
     if (typeof maybeError.message === "string") {
       return maybeError.message;
@@ -122,7 +122,7 @@ export function SignUp() {
                         autoComplete="name"
                         textContentType="name"
                         returnKeyType="next"
-                        blurOnSubmit={false}
+                        submitBehavior="submit"
                         onSubmitEditing={() => {
                           emailInputRef.current?.focus();
                         }}
@@ -146,7 +146,7 @@ export function SignUp() {
                         autoComplete="email"
                         textContentType="emailAddress"
                         returnKeyType="next"
-                        blurOnSubmit={false}
+                        submitBehavior="submit"
                         onSubmitEditing={() => {
                           passwordInputRef.current?.focus();
                         }}

@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install
 
 ENV NODE_ENV=production
 RUN cd apps/server && bun run build
-ENV SKIP_ENV_VALIDATION=
+ENV SKIP_ENV_VALIDATION=false
 
 EXPOSE 3000
 
