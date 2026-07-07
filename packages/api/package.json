@@ -1,0 +1,27 @@
+{
+  "name": "@watch3r/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "@watch3r/auth": "workspace:*",
+    "@watch3r/db": "workspace:*",
+    "@watch3r/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@watch3r/config": "workspace:*",
+    "hono": "catalog:",
+    "typescript": "^6"
+  }
+}

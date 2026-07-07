@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "types": ["vite/client"],
+    "rootDirs": ["."],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@watch3r/ui/*": ["../../packages/ui/src/*"]
+    }
+  }
+}

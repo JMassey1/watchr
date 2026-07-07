@@ -1,0 +1,3 @@
+{
+  "extends": "@watch3r/config/tsconfig.base.json"
+}

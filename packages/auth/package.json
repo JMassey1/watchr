@@ -1,0 +1,25 @@
+{
+  "name": "@watch3r/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@better-auth/expo": "catalog:",
+    "@watch3r/db": "workspace:*",
+    "@watch3r/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@watch3r/config": "workspace:*",
+    "typescript": "^6"
+  }
+}
