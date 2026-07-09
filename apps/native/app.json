@@ -8,7 +8,10 @@
     },
     "name": "watch3r",
     "slug": "watch3r",
-    "plugins": ["expo-font"],
+    "plugins": [
+      "expo-font",
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
