@@ -38,7 +38,7 @@ function getErrorMessage(error: unknown): string | null {
     return null;
   }
 
-  if (typeof error === "object" && error !== null) {
+  if (typeof error === "object") {
     const maybeError = error as { message?: unknown };
     if (typeof maybeError.message === "string") {
       return maybeError.message;
@@ -120,7 +120,7 @@ function SignIn() {
                         autoComplete="email"
                         textContentType="emailAddress"
                         returnKeyType="next"
-                        blurOnSubmit={false}
+                        submitBehavior="submit"
                         onSubmitEditing={() => {
                           passwordInputRef.current?.focus();
                         }}
