@@ -1,5 +1,7 @@
 import {useQuery} from "@tanstack/react-query";
 import {createFileRoute} from "@tanstack/react-router";
+import {Button} from "@watch3r/ui/components/button";
+
 
 import {trpc} from "@/utils/trpc";
 
@@ -19,6 +21,13 @@ function RouteComponent() {
 			<p>Welcome {session.data?.user.name}</p>
 			<p>API: {privateData.data?.message}</p>
 			<p> You have {watchlistCount.data?.count} watchlist(s)</p>
+			<br/>
+			<Button
+				variant="outline"
+				onClick={() => alert("Hello!")}
+			>
+				Hello
+			</Button>
 		</div>
 	);
 }
