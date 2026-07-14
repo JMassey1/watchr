@@ -17,7 +17,7 @@ export const watchlistMember = pgTable("watchlist_members", {
     role: watchlistRoleEnum("role").notNull().default("user"),
     joinedAt: timestamp("joined_at").notNull().defaultNow(),
 },
-    (t) => ({
-        pk: primaryKey({ columns: [t.watchlistId, t.userId]})
-    })
+    (t) => [
+        primaryKey({ columns: [t.watchlistId, t.userId] })
+    ]
 )
