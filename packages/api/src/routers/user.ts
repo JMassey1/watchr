@@ -5,18 +5,21 @@ import {watchlistMember} from "@watch3r/db/schema/watchlist";
 import {user} from "@watch3r/db/schema/auth";
 import {and, eq, ilike, or, notInArray} from "drizzle-orm";
 
+
+
 export const userRouter = router({
 	searchUsers: protectedProcedure
 		.input(
 			z.object({
 				watchlistId: z.number().optional(),
+				excludeExistingMembers: z.boolean().optional().default(true),
 				query: z.string().trim().min(2).max(100),
 				limit: z.number().min(1).max(20).default(10)
 			}),
 		)
 		.query(async ({ctx, input}) => {
 			const excludeIds = [ctx.session.user.id];
-			if (input.watchlistId) {
+			if (input.excludeExistingMembers && input.watchlistId) {
 				const existing = await db
 					.select({userId: watchlistMember.userId})
 					.from(watchlistMember)
@@ -28,7 +31,7 @@ export const userRouter = router({
 
 			const term = `%${input.query}%`;
 			return db
-				.select({userId: user.id, name: user.name, image: user.image})
+				.select({id: user.id, name: user.name, image: user.image})
 				.from(user)
 				.where(
 					and(
