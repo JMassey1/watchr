@@ -4,6 +4,7 @@ import {Button} from "@watch3r/ui/components/button";
 
 import {trpc} from "@/utils/trpc";
 import {useState} from "react";
+import {CreateListDialog} from "@/components/create-list-dialog";
 
 export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
@@ -26,12 +27,16 @@ function RouteComponent() {
 			<Button
 				variant="outline"
 				onClick={() => {
-					alert(`Hello ${session.data?.user.name} -- dialog = ${dialogOpen}`);
+					// alert(`Hello ${session.data?.user.name} -- dialog = ${dialogOpen}`);
 					setDialogOpen((prev) => !prev);
 				}}
 			>
 				Hello
 			</Button>
+			<CreateListDialog
+				userId={session.data?.user.id!} open={dialogOpen} onOpenChange={setDialogOpen}
+				onCreate={(list) => {}}
+			/>
 		</div>
 	);
 }
