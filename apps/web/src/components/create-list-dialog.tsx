@@ -19,18 +19,6 @@ export function CreateListDialog({
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
 
-	// Search
-	const [debouncedQuery, setDebouncedQuery] = useState<string>(""); //FIXME: Debounce!!
-	const [selected, setSelected] = useState<z.infer<typeof userSelectSchema>['id'][]>([]);
-	const searchResults = useQuery(
-		trpc.user.searchUsers.queryOptions({
-			query: debouncedQuery,
-		}, {
-			enabled: debouncedQuery.length >= 2,
-		}),
-	)
-	// TODO: Actually hook the search results up to UI
-
 	function reset() {
 		setName("");
 		setDescription("")
