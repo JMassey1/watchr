@@ -37,6 +37,7 @@ function RouteComponent() {
 				userId={session.data?.user.id!} open={dialogOpen} onOpenChange={setDialogOpen}
 				onCreate={(list) => {}}
 			/>
+		{/*	TODO: Wire up TRPC call to above^^*/}
 		</div>
 	);
 }
