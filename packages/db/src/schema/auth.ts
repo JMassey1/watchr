@@ -1,4 +1,5 @@
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import {createSelectSchema} from "drizzle-orm/zod";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -12,6 +13,7 @@ export const user = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+export const userSelectSchema = createSelectSchema(user);
 
 export const session = pgTable(
   "session",

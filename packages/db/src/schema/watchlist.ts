@@ -3,13 +3,21 @@ import { createInsertSchema } from "drizzle-orm/zod";
 import {user} from "./auth";
 
 export const watchlistRoleEnum = pgEnum('role', ['owner', 'admin', 'user']);
+export type WatchlistRole = (typeof watchlistRoleEnum.enumValues)[number];
+export const watchlistRoles = Object.fromEntries(
+    watchlistRoleEnum.enumValues.map((role) => [
+        `${role.charAt(0).toUpperCase()}${role.slice(1)}`,
+        role,
+    ]),
+) as { [R in WatchlistRole as Capitalize<R>]: R };
+
 
 export const watchlist = pgTable("watchlist", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: text("name").notNull(),
     ownerId: text("owner_id").notNull().references(() => user.id, {onDelete: 'cascade'}),
 })
-export const watchlistInsertSchema = createInsertSchema(watchlist);
+export const watchlistInsertSchema = createInsertSchema(watchlist).omit({ ownerId: true});
 
 export const watchlistMember = pgTable("watchlist_members", {
     watchlistId: integer("watchlist_id").notNull().references(() => watchlist.id, {onDelete: "cascade"}),
@@ -21,3 +29,4 @@ export const watchlistMember = pgTable("watchlist_members", {
         primaryKey({ columns: [t.watchlistId, t.userId] })
     ]
 )
+export const watchlistMemberInsertSchema = createInsertSchema(watchlistMember);
