@@ -10,26 +10,25 @@ import {Input} from "@watch3r/ui/components/input";
 import {Button} from "@watch3r/ui/components/button";
 
 
-export function UserSearchPicker({watchlistId, placeholder, disabled}: {
+export function UserSearchPicker({watchlistId, placeholder, disabled, selected, onSelectedChange}: {
 	watchlistId?: number            // forwarded to searchUsers to exclude existing members
 	placeholder?: string
 	disabled?: boolean
+	selected: z.infer<typeof userSelectSchema>[]
+	onSelectedChange: (user: z.infer<typeof userSelectSchema>[]) => void
 }) {
 	function toggleInvite(user: z.infer<typeof userSelectSchema>) {
-		setSelected((prev) =>
-			prev.includes(user)
-				? prev.filter((u) => u.id !== user.id)
-				: [...prev, user]
-		)
+		const next = selected.some((u) => u.id === user.id)
+			? selected.filter((u) => u.id !== user.id)
+			: [...selected, user];
+		onSelectedChange(next);
 	}
 
 	// Search
 	const [query, setQuery] = useState<string>("");
 	const [debouncedQuery] = useDebouncedValue(query, {
 		wait: 500,
-	})
-
-	const [selected, setSelected] = useState<z.infer<typeof userSelectSchema>[]>([]);
+	});
 
 	const isSearchable = debouncedQuery.trim().length >= 2
 	const searchResults = useQuery(
@@ -118,55 +117,56 @@ export function UserSearchPicker({watchlistId, placeholder, disabled}: {
 				<div className="h-px w-full bg-border" />
 			)}
 
-			{/* States */}
-			{query.length > 0 && query.length < 2 && (
-				<p className="text-sm text-muted-foreground">
-					Type at least 2 characters to search.
-				</p>
-			)}
-
-			{isSearchable && searchResults.isLoading && (
-				<div className="flex items-center gap-2 text-sm text-muted-foreground">
-					<Loader2 className="size-4 animate-spin"/>
-					Searching…
-				</div>
-			)}
-
-			{isSearchable &&
-				!searchResults.isLoading &&
-				searchResults.data?.length === 0 && (
-					<p className="text-sm text-muted-foreground">No users found.</p>
+			{/* Results section (with states) */}
+			<section className="flex flex-col gap-2">
+				{isSearchable && (
+					<div className="flex items-center gap-2">
+						<span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+							Results
+						</span>
+						{searchResults.isLoading && (
+							<Loader2 className="size-3.5 animate-spin text-muted-foreground"/>
+						)}
+					</div>
 				)}
 
-			{/* User Display */}
-			<div className="flex flex-wrap gap-2">
-				{isSearchable && visibleResults?.map((user) => {
-					const active = selected.some((u) => u.id === user.id)
-					return (
-						<button
-							key={user.id}
-							type="button"
-							onClick={() => toggleInvite(user)}
-							aria-pressed={active}
-							className={`inline-flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm transition-colors ${
-								active
-									? "border-primary bg-primary/10 text-foreground"
-									: "border-border bg-background text-muted-foreground hover:bg-secondary"
-							}`}
-						>
-							<Avatar>
-								{user.image && <AvatarImage src="placeholder.svg"/>}
-								<AvatarFallback>W3</AvatarFallback>
-								<AvatarBadge>
-									{active ? <Check/> : <PlusIcon/>}
-								</AvatarBadge>
-							</Avatar>
-							{user.name}
-							{active && <Check className="size-3.5 text-primary"/>}
-						</button>
-					)
-				})}
-			</div>
+				{/* States */}
+				{query.length > 0 && query.length < 2 && (
+					<p className="text-sm text-muted-foreground">
+						Type at least 2 characters to search.
+					</p>
+				)}
+				{isSearchable &&
+					!searchResults.isLoading &&
+					searchResults.data?.length === 0 && (
+						<p className="text-sm text-muted-foreground">No users found.</p>
+					)}
+
+				{/*	Result chips*/}
+				<div className="flex flex-wrap gap-2">
+					{isSearchable && visibleResults?.map((user) => {
+						const active = selected.some((u) => u.id === user.id)
+						return (
+							<button
+								key={user.id}
+								type="button"
+								onClick={() => toggleInvite(user)}
+								aria-pressed={false}
+								className="inline-flex items-center gap-2 rounded-full border border-dashed border-border bg-background py-1 pl-1 pr-3 text-sm text-muted-foreground transition-colors hover:border-solid hover:bg-secondary hover:text-foreground"
+							>
+								<Avatar>
+									{user.image && <AvatarImage src="placeholder.svg"/>}
+									<AvatarFallback>W3</AvatarFallback>
+									<AvatarBadge>
+										<PlusIcon />
+									</AvatarBadge>
+								</Avatar>
+								{user.name}
+							</button>
+						)
+					})}
+				</div>
+			</section>
 		</div>
 	);
 }

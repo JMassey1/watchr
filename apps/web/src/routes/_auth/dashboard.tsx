@@ -1,8 +1,8 @@
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {createFileRoute} from "@tanstack/react-router";
 import {Button} from "@watch3r/ui/components/button";
 
-import {trpc} from "@/utils/trpc";
+import {queryClient, trpc} from "@/utils/trpc";
 import {useState} from "react";
 import {CreateListDialog} from "@/components/create-list-dialog";
 import {UserSearchPicker} from "@/components/user-search-picker";
@@ -17,6 +17,20 @@ function RouteComponent() {
 
 	const privateData = useQuery(trpc.privateData.queryOptions());
 	const watchlistCount = useQuery(trpc.watchlist.myWatchlistCount.queryOptions())
+	const createWatchlist = useMutation(
+		trpc.watchlist.create.mutationOptions({
+			onSuccess: async () => {
+				await queryClient.invalidateQueries({
+					queryKey: trpc.watchlist.myWatchlistCount.queryKey(),
+				})
+			},
+			onError: (err) => {
+				//TODO: Toast notif here
+				alert("Error creating watchlist");
+				console.error("Error creating watchlist", err)
+			}
+		})
+	)
 
 	return (
 		<div className="flex flex-col">
@@ -37,7 +51,13 @@ function RouteComponent() {
 			<CreateListDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
-				onCreate={(list) => {}}
+				onCreate={(dialogInputs) => {
+					console.log("Created list with: ", dialogInputs);
+					createWatchlist.mutate({
+						name: dialogInputs.watchlist.name,
+						memberIds: dialogInputs.members.map((u) => u.id)
+					})
+				}}
 			/>
 		{/*	TODO: Wire up TRPC call to above^^*/}
 		</div>
