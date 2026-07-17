@@ -1,4 +1,4 @@
-import {and, count, eq, sql} from "drizzle-orm";
+import {and, count, eq} from "drizzle-orm";
 import {protectedProcedure, router} from "../index";
 import {db} from "@watch3r/db";
 import {
@@ -6,9 +6,11 @@ import {
 	watchlistMember,
 	watchlistInsertSchema,
 	watchlistMemberInsertSchema,
-	watchlistRoles
+	watchlistRoles, watchlistSelectSchema
 } from "@watch3r/db/schema/watchlist";
 import {z} from "zod";
+import {TRPCError} from "@trpc/server";
+import {user} from "@watch3r/db/schema/auth";
 
 
 /*
@@ -36,12 +38,13 @@ export const watchlistRouter = router({
 		.query(async ({ ctx, input }) => {
 			const userId = ctx.session.user.id;
 
-			return db
+			 return db
 				.select({
 					id: watchlist.id,
 					name: watchlist.name,
-					owner: watchlist.ownerId,
-					isOwner: sql<boolean>`${watchlist.ownerId} = ${userId}`
+					ownerId: watchlist.ownerId,
+					updatedAt: watchlist.updatedAt,
+					createdAt: watchlist.createdAt,
 				})
 				.from(watchlistMember)
 				.innerJoin(watchlist, eq(watchlistMember.watchlistId, watchlist.id))
@@ -53,6 +56,39 @@ export const watchlistRouter = router({
 							)
 						: eq(watchlistMember.userId, userId)
 				);
+		}),
+	getWatchlistMembers: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+		}))
+		.query(async ({ ctx, input }) => {
+			const userId = ctx.session.user.id;
+			const [membership] = await db
+				.select({ userId: watchlistMember.userId})
+				.from(watchlistMember)
+				.where(
+					and(
+						eq(watchlistMember.watchlistId, input.watchlistId),
+						eq(watchlistMember.userId, userId)
+					)
+				)
+				.limit(1);
+
+			if (!membership) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You are not a member of this watchlist"
+				})
+			}
+			return db
+				.select({
+					id: user.id,
+					name: user.name,
+					image: user.image,
+				})
+				.from(watchlistMember)
+				.innerJoin(user, eq(watchlistMember.userId, user.id))
+				.where(eq(watchlistMember.watchlistId, input.watchlistId));
 		}),
 	create: protectedProcedure
 		.input(watchlistInsertSchema.omit({ ownerId: true}).extend({
