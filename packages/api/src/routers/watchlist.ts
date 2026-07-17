@@ -1,8 +1,15 @@
 import {and, count, eq, sql} from "drizzle-orm";
 import {protectedProcedure, router} from "../index";
 import {db} from "@watch3r/db";
-import {watchlist, watchlistInsertSchema, watchlistMember} from "@watch3r/db/schema/watchlist";
+import {
+	watchlist,
+	watchlistMember,
+	watchlistInsertSchema,
+	watchlistMemberInsertSchema,
+	watchlistRoles
+} from "@watch3r/db/schema/watchlist";
 import {z} from "zod";
+
 
 /*
 TODO:
@@ -48,8 +55,35 @@ export const watchlistRouter = router({
 				);
 		}),
 	create: protectedProcedure
-		.input(watchlistInsertSchema.omit({ ownerId: true}))
+		.input(watchlistInsertSchema.omit({ ownerId: true}).extend({
+			memberIds: z.array(watchlistMemberInsertSchema.shape.userId).default([]),
+		}))
 		.mutation(async ({ ctx, input }) => {
-			return db.insert(watchlist).values({...input, ownerId: ctx.session.user.id}).returning();
+			const { memberIds, ...watchlistData } = input;
+
+			return db.transaction(async (tx) => {
+				const [createdWatchlist] = await tx
+					.insert(watchlist)
+					.values({
+						ownerId: ctx.session.user.id,
+						name: watchlistData.name,
+					}).returning();
+
+				if (!createdWatchlist) {
+					// tx.rollback(); -- TS doesn't recognize this as an error, nor does it take any custom message
+					//   -- all it does is just throw a special error (so useless?)
+					throw new Error("Error Creating new Watchlist");
+				}
+
+				if (memberIds.length > 0) {
+					await tx.insert(watchlistMember).values(
+						memberIds.map((userId) => ({
+							watchlistId: createdWatchlist.id,
+							userId: userId,
+							role: watchlistRoles.User
+						}))
+					)
+				}
+			})
 		})
 })
