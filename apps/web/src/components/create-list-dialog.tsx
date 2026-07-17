@@ -1,21 +1,17 @@
 import {watchlistInsertSchema} from "@watch3r/db/schema/watchlist";
+import {userSelectSchema} from "@watch3r/db/schema/auth";
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from "@watch3r/ui/components/dialog";
 import {z} from "zod";
 import React, {useState} from "react";
 import {trpc} from "@/utils/trpc";
-import {inferProcedureOutput} from "@trpc/server";
-import type {AppRouter} from "@watch3r/api/routers/index";
 import {useQuery} from "@tanstack/react-query";
 
-type UserId = inferProcedureOutput<AppRouter['user']['searchUsers']>[number]['id'];
 
 export function CreateListDialog({
-	userId,
 	open,
 	onOpenChange,
 	onCreate,
 }: {
-	userId: z.infer<typeof watchlistInsertSchema>["ownerId"]
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	onCreate: (list: z.infer<typeof watchlistInsertSchema>) => void
@@ -25,7 +21,7 @@ export function CreateListDialog({
 
 	// Search
 	const [debouncedQuery, setDebouncedQuery] = useState<string>(""); //FIXME: Debounce!!
-	const [selected, setSelected] = useState<UserId[]>([]);
+	const [selected, setSelected] = useState<z.infer<typeof userSelectSchema>['id'][]>([]);
 	const searchResults = useQuery(
 		trpc.user.searchUsers.queryOptions({
 			query: debouncedQuery,
@@ -44,10 +40,7 @@ export function CreateListDialog({
 		e.preventDefault();
 		if (!name.trim()) return;
 
-		onCreate({
-			ownerId: userId,
-			name
-		});
+		onCreate({ name: "temp"});
 		onOpenChange(false);
 		reset();
 	}

@@ -34,7 +34,8 @@ function RouteComponent() {
 				Hello
 			</Button>
 			<CreateListDialog
-				userId={session.data?.user.id!} open={dialogOpen} onOpenChange={setDialogOpen}
+				open={dialogOpen}
+				onOpenChange={setDialogOpen}
 				onCreate={(list) => {}}
 			/>
 		{/*	TODO: Wire up TRPC call to above^^*/}
