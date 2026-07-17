@@ -17,7 +17,7 @@ export const watchlist = pgTable("watchlist", {
     name: text("name").notNull(),
     ownerId: text("owner_id").notNull().references(() => user.id, {onDelete: 'cascade'}),
 })
-export const watchlistInsertSchema = createInsertSchema(watchlist).omit({ ownerId: true});
+export const watchlistInsertSchema = createInsertSchema(watchlist).partial({"ownerId": true});
 
 export const watchlistMember = pgTable("watchlist_members", {
     watchlistId: integer("watchlist_id").notNull().references(() => watchlist.id, {onDelete: "cascade"}),
