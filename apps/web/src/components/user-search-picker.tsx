@@ -77,27 +77,45 @@ export function UserSearchPicker({watchlistId, placeholder, disabled}: {
 
 			{/* Selected users — always visible regardless of query */}
 			{selected.length > 0 && (
-				<div className="flex flex-wrap gap-2">
-					{selected.map((user) => (
-						<button
-							key={user.id}
-							type="button"
-							onClick={() => toggleInvite(user)}
-							aria-pressed={true}
-							className="inline-flex items-center gap-2 rounded-full border border-primary bg-primary/10 py-1 pl-1 pr-3 text-sm text-foreground transition-colors"
-						>
-							<Avatar>
-								{user.image && <AvatarImage src="placeholder.svg"/>}
-								<AvatarFallback>W3</AvatarFallback>
-								<AvatarBadge>
-									<Check/>
-								</AvatarBadge>
-							</Avatar>
-							{user.name}
-							<X className="size-3.5 text-muted-foreground"/>
-						</button>
-					))}
-				</div>
+				<>
+					<section className="flex flex-col gap-2">
+						<div className="flex items-center justify-between">
+							<span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+								Selected
+							</span>
+							<span className="text-xs text-muted-foreground">
+								{selected.length}
+							</span>
+						</div>
+
+						<div className="flex flex-wrap gap-2">
+							{selected.map((user) => (
+								<button
+									key={user.id}
+									type="button"
+									onClick={() => toggleInvite(user)}
+									aria-pressed={true}
+									className="group inline-flex items-center gap-2 rounded-full border border-primary bg-primary/10 py-1 pl-1 pr-3 text-sm text-foreground transition-colors hover:bg-primary/15"
+								>
+									<Avatar>
+										{user.image && <AvatarImage src="placeholder.svg"/>}
+										<AvatarFallback>W3</AvatarFallback>
+										<AvatarBadge>
+											<Check/>
+										</AvatarBadge>
+									</Avatar>
+									{user.name}
+									<X className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground"/>
+								</button>
+							))}
+						</div>
+					</section>
+				</>
+			)}
+
+			{/* Divider between selected and results*/}
+			{selected.length > 0 && isSearchable && (
+				<div className="h-px w-full bg-border" />
 			)}
 
 			{/* States */}
@@ -136,7 +154,6 @@ export function UserSearchPicker({watchlistId, placeholder, disabled}: {
 									: "border-border bg-background text-muted-foreground hover:bg-secondary"
 							}`}
 						>
-							{/*<Avatar person={user} ring={false} className="size-6 text-[10px]" />*/}
 							<Avatar>
 								{user.image && <AvatarImage src="placeholder.svg"/>}
 								<AvatarFallback>W3</AvatarFallback>
