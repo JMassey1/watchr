@@ -16,6 +16,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@tailwindcss/vite": "^4.3.2",
     "@tanstack/react-form": "catalog:",
+    "@tanstack/react-pacer": "^0.22.1",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "^1.170.17",
     "@trpc/client": "catalog:",
