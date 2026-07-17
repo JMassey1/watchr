@@ -34,10 +34,6 @@ function RouteComponent() {
 			>
 				Hello
 			</Button>
-			{Array(10).map(() => <br />)}
-			<UserSearchPicker
-				placeholder="🐈 - placeholder_test"
-			/>
 			<CreateListDialog
 				open={dialogOpen}
 				onOpenChange={setDialogOpen}
