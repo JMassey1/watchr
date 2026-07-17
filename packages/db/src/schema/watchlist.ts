@@ -1,5 +1,5 @@
 import {pgTable, integer, text, pgEnum, timestamp, primaryKey} from 'drizzle-orm/pg-core'
-import { createInsertSchema } from "drizzle-orm/zod";
+import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
 import {user} from "./auth";
 
 export const watchlistRoleEnum = pgEnum('role', ['owner', 'admin', 'user']);
@@ -16,8 +16,11 @@ export const watchlist = pgTable("watchlist", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: text("name").notNull(),
     ownerId: text("owner_id").notNull().references(() => user.id, {onDelete: 'cascade'}),
+    updatedAt: timestamp("updated_at", {mode: "date", withTimezone: true}).notNull().defaultNow().$onUpdate(() => new Date()),
+    createdAt: timestamp("created_at", {mode: "date", withTimezone: true}).notNull().defaultNow(),
 })
 export const watchlistInsertSchema = createInsertSchema(watchlist).partial({"ownerId": true});
+export const watchlistSelectSchema = createSelectSchema(watchlist);
 
 export const watchlistMember = pgTable("watchlist_members", {
     watchlistId: integer("watchlist_id").notNull().references(() => watchlist.id, {onDelete: "cascade"}),
