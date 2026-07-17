@@ -4,6 +4,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@watch3r/api/routers/index";
 import { env } from "@watch3r/env/web";
 import { toast } from "sonner";
+import superjson from "superjson";
 
 function getServerUrl(url: string) {
   const normalized = url.endsWith("/") ? url.slice(0, -1) : url;
@@ -51,6 +52,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
       url: `${getServerUrl(env.VITE_SERVER_URL)}/trpc`,
+      transformer: superjson,
       fetch(url, options) {
         return fetch(url, {
           ...options,
