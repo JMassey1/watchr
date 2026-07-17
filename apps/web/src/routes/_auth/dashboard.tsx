@@ -6,6 +6,7 @@ import {queryClient, trpc} from "@/utils/trpc";
 import {useState} from "react";
 import {CreateListDialog} from "@/components/create-list-dialog";
 import {UserSearchPicker} from "@/components/user-search-picker";
+import {toast} from "sonner";
 
 export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
@@ -23,10 +24,10 @@ function RouteComponent() {
 				await queryClient.invalidateQueries({
 					queryKey: trpc.watchlist.myWatchlistCount.queryKey(),
 				})
+				toast.success(`Watchlist Created!`)
 			},
 			onError: (err) => {
-				//TODO: Toast notif here
-				alert("Error creating watchlist");
+				toast.error("Error creatin watchlist");
 				console.error("Error creating watchlist", err)
 			}
 		})
