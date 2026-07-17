@@ -75,6 +75,13 @@ export const watchlistRouter = router({
 					throw new Error("Error Creating new Watchlist");
 				}
 
+				// Add the owner as a watchlistMember
+				await tx.insert(watchlistMember).values({
+					watchlistId: createdWatchlist.id,
+						userId: ctx.session.user.id,
+						role: watchlistRoles.Owner
+				});
+
 				if (memberIds.length > 0) {
 					await tx.insert(watchlistMember).values(
 						memberIds.map((userId) => ({
