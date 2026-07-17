@@ -13,7 +13,12 @@ export const user = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
-export const userSelectSchema = createSelectSchema(user);
+export const userSelectSchema = createSelectSchema(user).omit({
+    email: true,
+    emailVerified: true,
+    createdAt: true,
+    updatedAt: true,
+});
 
 export const session = pgTable(
   "session",
