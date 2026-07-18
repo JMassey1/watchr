@@ -1,21 +1,26 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@watch3r/env/server";
-import {
-	WATCHLIST_COVER_CONTENT_TYPES,
-	type WatchlistCoverContentType,
-} from "./watchlist";
 
-/**
- * S3-compatible client. In dev this points at the local MinIO container; in
- * prod set the S3_* env vars to your Cloudflare R2 credentials/endpoint.
- *
- * `forcePathStyle` is required for MinIO (bucket in the path rather than a
- * virtual-host subdomain).
- */
 export const s3 = new S3Client({
 	region: env.S3_REGION,
 	endpoint: env.S3_ENDPOINT,
+	forcePathStyle: true,
+	credentials: {
+		accessKeyId: env.S3_ACCESS_KEY_ID,
+		secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+	},
+});
+
+/**
+ * Client used solely to generate presigned URLs the BROWSER will execute.
+ * It is configured with the browser-reachable endpoint so the signed `host`
+ * matches what the browser hits. Signing is offline, so this client never
+ * opens a connection to the storage backend.
+ */
+export const s3Presign = new S3Client({
+	region: env.S3_REGION,
+	endpoint: env.S3_PUBLIC_ENDPOINT,
 	forcePathStyle: true,
 	credentials: {
 		accessKeyId: env.S3_ACCESS_KEY_ID,
@@ -59,38 +64,11 @@ export function createPresignUpload<
 			Key: key,
 			ContentType: contentType,
 		});
-		const uploadUrl = await getSignedUrl(s3, command, {
+		const uploadUrl = await getSignedUrl(s3Presign, command, {
 			expiresIn: expiresInSeconds,
 		});
-		const publicUrl = `${publicBaseUrl.replace(/\/$/, "")}/${key}`;
+		const publicUrl = `${publicBaseUrl.replace(/\/$/, "")}/${bucket}/${key}`;
 
 		return { uploadUrl, key, publicUrl };
 	};
-}
-
-export async function presignWatchlistCoverUpload({
-	watchlistId,
-	contentType,
-	expiresInSeconds = 60,
-}: {
-	watchlistId: string;
-	contentType: WatchlistCoverContentType;
-	expiresInSeconds?: number;
-}): Promise<PresignUploadResult> {
-	const ext = WATCHLIST_COVER_CONTENT_TYPES[contentType];
-	const key = `covers/${watchlistId}/${crypto.randomUUID()}.${ext}`;
-
-	const command = new PutObjectCommand({
-		Bucket: env.S3_COVERS_BUCKET,
-		Key: key,
-		ContentType: contentType,
-	});
-
-	const uploadUrl = await getSignedUrl(s3, command, {
-		expiresIn: expiresInSeconds,
-	});
-
-	const publicUrl = `${env.S3_PUBLIC_URL.replace(/\/$/, "")}/${key}`;
-
-	return { uploadUrl, key, publicUrl };
 }
