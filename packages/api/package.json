@@ -18,7 +18,9 @@
     "@watch3r/auth": "workspace:*",
     "@watch3r/db": "workspace:*",
     "@watch3r/env": "workspace:*",
+    "@watch3r/storage": "workspace:*",
     "dotenv": "catalog:",
+    "superjson": "^2.2.6",
     "zod": "catalog:"
   },
   "devDependencies": {

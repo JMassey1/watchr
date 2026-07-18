@@ -12,6 +12,8 @@ import {
 import { Skeleton } from "@watch3r/ui/components/skeleton";
 
 import { authClient } from "@/lib/auth-client";
+import {UserAvatar} from "@/components/user-avatar";
+import {Settings, User} from "lucide-react";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ export default function UserMenu() {
 
   if (!session) {
     return (
-      <Link to="/login">
+      <Link to="/login" search={{ mode: "sign-in" }}>
         <Button variant="outline">Sign In</Button>
       </Link>
     );
@@ -31,14 +33,17 @@ export default function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" />}>
-        {session.user.name}
+      <DropdownMenuTrigger render={<Button variant="ghost" className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-muted-foreground transition-colors hover:text-foreground" />}>
+        <UserAvatar user={session.user} badgeIcon={<User className="size-4" />} />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-card">
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/settings" />}>
+            <Settings /> Settings
+          </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {

@@ -19,14 +19,14 @@
   "dependencies": {
     "@watch3r/env": "workspace:*",
     "dotenv": "catalog:",
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "^1.0.0-rc.4",
     "pg": "^8.22.0",
-    "zod": "catalog:"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/pg": "^8.20.0",
     "@watch3r/config": "workspace:*",
-    "drizzle-kit": "^0.31.10",
+    "drizzle-kit": "1.0.0-rc.4",
     "typescript": "^6"
   }
 }
