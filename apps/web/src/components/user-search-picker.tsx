@@ -97,7 +97,7 @@ export function UserSearchPicker({watchlistId, placeholder, disabled, selected, 
 									className="group inline-flex items-center gap-2 rounded-full border border-primary bg-primary/10 py-1 pl-1 pr-3 text-sm text-foreground transition-colors hover:bg-primary/15"
 								>
 									<Avatar>
-										{user.image && <AvatarImage src="placeholder.svg"/>}
+										{user.image && <AvatarImage src={user.image || "placeholder.svg"}/>}
 										<AvatarFallback>W3</AvatarFallback>
 										<AvatarBadge>
 											<Check/>
