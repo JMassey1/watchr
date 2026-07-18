@@ -4,6 +4,7 @@ import {Avatar, AvatarBadge, AvatarFallback, AvatarImage} from "@watch3r/ui/comp
 import {Check} from "lucide-react";
 import {cn} from "@watch3r/ui/lib/utils";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@watch3r/ui/components/tooltip";
+import {UserAvatar} from "@/components/user-avatar";
 
 export function MemberStack({users, showBadge = false, max = 4, size = 'sm'}: {
 	users: z.infer<typeof userSelectSchema>[]
@@ -20,15 +21,7 @@ export function MemberStack({users, showBadge = false, max = 4, size = 'sm'}: {
 			{shown.map((user) => (
 				<Tooltip>
 					<TooltipTrigger>
-						<Avatar className={dim}>
-							{user.image && <AvatarImage src="placeholder.svg"/>}
-							<AvatarFallback>W3</AvatarFallback>
-							{showBadge && (
-								<AvatarBadge>
-									<Check/>
-								</AvatarBadge>
-							)}
-						</Avatar>
+						<UserAvatar user={user} showBadge={showBadge} className={dim} />
 					</TooltipTrigger>
 					<TooltipContent>
 						<p>{user.name}</p>
