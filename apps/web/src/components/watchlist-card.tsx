@@ -27,7 +27,7 @@ export function WatchlistCard({watchlist}: { watchlist: z.infer<typeof watchlist
 				className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg hover:shadow-black/5">
 				<div className="relative aspect-[16/10] overflow-hidden">
 					<img
-						src={"/placeholder.svg"}
+						src={watchlist.coverImage || "placeholder.svg"}
 						alt={`Cover art for ${watchlist.name}`}
 						sizes="(max-width: 768px) 100vw, 33vw"
 						className="object-cover transition-transform duration-300 group-hover:scale-105"
