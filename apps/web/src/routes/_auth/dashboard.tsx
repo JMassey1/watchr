@@ -1,5 +1,5 @@
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {createFileRoute} from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
 import {Button} from "@watch3r/ui/components/button";
 
 import {queryClient, trpc} from "@/utils/trpc";
@@ -7,7 +7,7 @@ import {useMemo, useState} from "react";
 import {CreateListDialog} from "@/components/create-list-dialog";
 import {toast} from "sonner";
 import {WatchlistCard} from "@/components/watchlist-card";
-import {Clapperboard, Crown, Film, Plus, Search, Users} from "lucide-react";
+import {Clapperboard, Crown, Film, Plus, Search, Settings, Users} from "lucide-react";
 
 export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
@@ -66,13 +66,15 @@ function RouteComponent() {
 	return (
 		<div className="mih-h-screen">
 			<main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-				<div className="space-y-1.5">
-					<h1 className="font-serif text-3xl font-semibold tracking-light text-balance sm:text-4xl">
-						Your watchlists
-					</h1>
-					<p className="text-muted-foreground text-pretty">
-						Everything you&apos;re watching with friends, all in one place.
-					</p>
+				<div className="flex items-start justify-between gap-4">
+					<div className="space-y-1.5">
+						<h1 className="font-serif text-3xl font-semibold tracking-light text-balance sm:text-4xl">
+							Your watchlists
+						</h1>
+						<p className="text-muted-foreground text-pretty">
+							Everything you&apos;re watching with friends, all in one place.
+						</p>
+					</div>
 				</div>
 
 				{/* Stats */}
