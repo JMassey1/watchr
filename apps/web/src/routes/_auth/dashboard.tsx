@@ -15,9 +15,9 @@ export const Route = createFileRoute("/_auth/dashboard")({
 
 type Filter = 'all' | 'owned' | 'shared';
 const FILTERS: { key: Filter; label: string }[] = [
-	{ key: 'all', label: 'All lists' },
-	{ key: 'owned', label: 'Owned by me' },
-	{ key: 'shared', label: 'Shared with me' }
+	{key: 'all', label: 'All lists'},
+	{key: 'owned', label: 'Owned by me'},
+	{key: 'shared', label: 'Shared with me'}
 ]
 
 function RouteComponent() {
@@ -57,10 +57,18 @@ function RouteComponent() {
 	}, [myWatchlists.data, session.data?.user.id, filter, watchlistQuery]);
 
 	const stats = [
-		{ label: "Watchlists", value: myWatchlists.data?.length, icon: Film},
-		{ label: "Owned by you", value: myWatchlists.data?.filter((wl) => wl.ownerId === session.data?.user.id).length, icon: Crown},
-		{ label: "Shared with you", value: myWatchlists.data?.filter((wl) => wl.ownerId !== session.data?.user.id).length, icon: Users},
-		{ label: "Titles queued", value: 67, icon: Clapperboard},
+		{label: "Watchlists", value: myWatchlists.data?.length, icon: Film},
+		{
+			label: "Owned by you",
+			value: myWatchlists.data?.filter((wl) => wl.ownerId === session.data?.user.id).length,
+			icon: Crown
+		},
+		{
+			label: "Shared with you",
+			value: myWatchlists.data?.filter((wl) => wl.ownerId !== session.data?.user.id).length,
+			icon: Users
+		},
+		{label: "Titles queued", value: 67, icon: Clapperboard},
 	]
 
 	return (
@@ -83,7 +91,7 @@ function RouteComponent() {
 						<div key={stat.label} className="rounded-2xl border border-border bg-card p-5">
 							<div className="flex items-center justify-between">
 								<span className="text-sm text-muted-foreground">{stat.label}</span>
-								<stat.icon className="size-4 text-muted-foreground" aria-hidden="true" />
+								<stat.icon className="size-4 text-muted-foreground" aria-hidden="true"/>
 							</div>
 							<p className="mt-2 font-serif text-3xl font-semibold">{stat.value}</p>
 						</div>
@@ -109,28 +117,36 @@ function RouteComponent() {
 						))}
 					</div>
 
-					<div className="relative sm:w-64">
-						<Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-						<input
-							value={watchlistQuery}
-							onChange={(e) => setWatchlistQuery(e.target.value)}
-							placeholder="Search watchlists"
-							aria-label="Search watchlists"
-							className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-sm outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/40"
-						/>
+					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+						{/* Search Bar */}
+						<div className="relative sm:w-64">
+							<Search
+								className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/>
+							<input
+								value={watchlistQuery}
+								onChange={(e) => setWatchlistQuery(e.target.value)}
+								placeholder="Search watchlists"
+								aria-label="Search watchlists"
+								className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-sm outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/40"
+							/>
+						</div>
+						<Button onClick={() => setDialogOpen(true)} className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors bg-primary text-primary-foreground">
+							<Plus className="size-4"/>
+						</Button>
 					</div>
 				</div>
 
 				{filteredWatchlists.length > 0 ? (
 					<section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
 						{filteredWatchlists.map((watchlist) => (
-							<WatchlistCard key={`watchlist-card-${watchlist.id}`} watchlist={watchlist} />
+							<WatchlistCard key={`watchlist-card-${watchlist.id}`} watchlist={watchlist}/>
 						))}
 					</section>
 				) : (
-					<div className="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
+					<div
+						className="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
 						<span className="flex size-12 items-center justify-center rounded-2xl bg-secondary">
-							<Film className="size-6 text-muted-foreground" />
+							<Film className="size-6 text-muted-foreground"/>
 						</span>
 						<h2 className="mt-4 font-serif text-lg font-semibold">No watchlists found</h2>
 						<p className="mt-1 max-w-sm text-sm text-muted-foreground text-pretty">
@@ -139,10 +155,12 @@ function RouteComponent() {
 								: "Create your first watchlist and invite friends to watch along."
 							}
 						</p>
-						<Button onClick={() => setDialogOpen(true)} className="mt-4 gap-1.5">
-							<Plus className="size-4" />
+
+						<Button onClick={() => setDialogOpen(true)} className="gap-1.5">
+							<Plus className="size-4"/>
 							New watchlist
 						</Button>
+
 					</div>
 				)}
 			</main>
