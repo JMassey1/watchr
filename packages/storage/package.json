@@ -1,0 +1,25 @@
+{
+  "name": "@watch3r/storage",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc -b",
+    "clean": "rm -rf node_modules dist .turbo .cache"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:",
+    "@watch3r/env": "workspace:*"
+  },
+  "devDependencies": {
+    "@watch3r/config": "workspace:*",
+    "typescript": "^6"
+  }
+}
