@@ -40,5 +40,5 @@ export const storageRouter = router({
 				watchlistId: input.watchlistId.toString(),
 				contentType: input.contentType,
 			});
-		})
+		}),
 });

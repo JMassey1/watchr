@@ -43,6 +43,7 @@ export const watchlistRouter = router({
 					id: watchlist.id,
 					name: watchlist.name,
 					ownerId: watchlist.ownerId,
+					coverImage: watchlist.coverImage,
 					updatedAt: watchlist.updatedAt,
 					createdAt: watchlist.createdAt,
 				})
@@ -128,5 +129,54 @@ export const watchlistRouter = router({
 					)
 				}
 			})
+		}),
+	update: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+			data: watchlistInsertSchema
+				.pick({ name: true, coverImage: true })
+				.partial()
+				.refine((d) => Object.keys(d).length > 0, {
+					message: "No fields provided to update",
+				}),
+		}))
+		.mutation(async ({ ctx, input }) => {
+			const userId = ctx.session.user.id;
+
+			const [membership] = await db
+				.select({ role: watchlistMember.role })
+				.from(watchlistMember)
+				.where(
+					and(
+						eq(watchlistMember.watchlistId, input.watchlistId),
+						eq(watchlistMember.userId, userId)
+					)
+				)
+				.limit(1);
+
+			if (!membership ||
+				(membership.role !== watchlistRoles.Owner &&
+					membership.role !== watchlistRoles.Admin)
+			) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "You do not have permission to update this watchlist"
+				});
+			}
+
+			const [updated] = await db
+				.update(watchlist)
+				.set(input.data)
+				.where(eq(watchlist.id, input.watchlistId))
+				.returning();
+
+			if (!updated) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Watchlist not found"
+				});
+			}
+
+			return updated;
 		})
 })
