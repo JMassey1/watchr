@@ -51,8 +51,8 @@ function RouteComponent() {
 		return data.filter((wl) => {
 			if (filter === 'owned' && wl.ownerId !== userId) return false;
 			if (filter === 'shared' && wl.ownerId === userId) return false;
-			if (q && !wl.name.toLowerCase().includes(q)) return false;
-			return true;
+			return !(q && !wl.name.toLowerCase().includes(q));
+
 		});
 	}, [myWatchlists.data, session.data?.user.id, filter, watchlistQuery]);
 
@@ -122,7 +122,7 @@ function RouteComponent() {
 				{filteredWatchlists.length > 0 ? (
 					<section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
 						{filteredWatchlists.map((watchlist) => (
-							<WatchlistCard watchlist={watchlist} />
+							<WatchlistCard key={`watchlist-card-${watchlist.id}`} watchlist={watchlist} />
 						))}
 					</section>
 				) : (
