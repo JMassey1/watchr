@@ -1,6 +1,7 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@watch3r/env/server";
+import {AVATAR_CONTENT_TYPES, type AvatarContentType, type PresignAvatarUploadResult} from "./avatars";
 
 /**
  * S3-compatible client. In dev this points at the local MinIO container; in
@@ -19,23 +20,6 @@ export const s3 = new S3Client({
 	},
 });
 
-export const AVATAR_CONTENT_TYPES = {
-	"image/png": "png",
-	"image/jpeg": "jpg",
-	"image/webp": "webp",
-} as const;
-
-export type AvatarContentType = keyof typeof AVATAR_CONTENT_TYPES;
-
-export const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // max 5MB
-
-export type PresignAvatarUploadResult = {
-	uploadUrl: string;
-	key: string;
-	publicUrl: string;
-};
-
-// Creates presigned upload url
 export async function presignAvatarUpload({
 	userId,
 	contentType,
@@ -49,7 +33,7 @@ export async function presignAvatarUpload({
 	const key = `avatars/${userId}/${crypto.randomUUID()}.${ext}`;
 
 	const command = new PutObjectCommand({
-		Bucket: env.S3_BUCKET,
+		Bucket: env.S3_AVATARS_BUCKET,
 		Key: key,
 		ContentType: contentType,
 	});

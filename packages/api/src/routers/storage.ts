@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../index";
+import { presignAvatarUpload } from "@watch3r/storage";
 import {
 	AVATAR_CONTENT_TYPES,
 	MAX_AVATAR_SIZE,
-	presignAvatarUpload,
-} from "@watch3r/storage";
+} from "@watch3r/storage/avatars";
 
 const avatarContentType = z.enum(
 	Object.keys(AVATAR_CONTENT_TYPES) as [
