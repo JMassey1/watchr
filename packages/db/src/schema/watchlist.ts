@@ -11,10 +11,10 @@ export const watchlistRoles = Object.fromEntries(
     ]),
 ) as { [R in WatchlistRole as Capitalize<R>]: R };
 
-
 export const watchlist = pgTable("watchlist", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     name: text("name").notNull(),
+    coverImage: text("cover_image"),
     ownerId: text("owner_id").notNull().references(() => user.id, {onDelete: 'cascade'}),
     updatedAt: timestamp("updated_at", {mode: "date", withTimezone: true}).notNull().defaultNow().$onUpdate(() => new Date()),
     createdAt: timestamp("created_at", {mode: "date", withTimezone: true}).notNull().defaultNow(),
