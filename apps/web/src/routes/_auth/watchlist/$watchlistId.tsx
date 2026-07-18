@@ -1,8 +1,8 @@
 import {createFileRoute, Link, redirect} from '@tanstack/react-router'
 import {useMemo, useState} from "react";
 import {useQuery} from "@tanstack/react-query";
-import {Button} from "@watch3r/ui/components/button";
-import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Users} from "lucide-react";
+import {Button, buttonVariants} from "@watch3r/ui/components/button";
+import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Settings, Users} from "lucide-react";
 
 import {queryClient, trpc} from "@/utils/trpc";
 import {MemberStack} from "@/components/member-stack";
@@ -133,6 +133,16 @@ function RouteComponent() {
 
 					<div className="flex items-center gap-3">
 						<MemberStack users={watchlistMembers.data ?? []} size="md" />
+						{isOwner && (
+							<Link
+								to="/watchlist/$watchlistId/settings"
+								params={{ watchlistId: watchlist.id.toString() }}
+								className={buttonVariants({ variant: "outline", className: "gap-1.5" })}
+							>
+								<Settings className="size-4" />
+								Settings
+							</Link>
+						)}
 						<Button className="gap-1.5">
 							<Plus className="size-4" />
 							Add title

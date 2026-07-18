@@ -1,11 +1,13 @@
 import {createFileRoute, Link, redirect} from '@tanstack/react-router'
 import {queryClient, trpc} from "@/utils/trpc";
 import {useRef} from "react";
+import {useQuery} from "@tanstack/react-query";
 import {useCoverUpload} from "@/hooks/user-cover-upload";
 import {toast} from "sonner";
-import {ArrowLeft} from "lucide-react";
+import {ArrowLeft, Loader2, Upload} from "lucide-react";
+import {Button} from "@watch3r/ui/components/button";
 
-export const Route = createFileRoute('/_auth/watchlist/$watchlistId/settings')({
+export const Route = createFileRoute('/_auth/watchlist/$watchlistId_/settings')({
   loader: async ({params}) => {
     const watchlists = await queryClient.fetchQuery({
       ...trpc.watchlist.myWatchlists.queryOptions(),
@@ -29,8 +31,13 @@ export const Route = createFileRoute('/_auth/watchlist/$watchlistId/settings')({
 })
 
 function RouteComponent() {
-  const { watchlist } = Route.useLoaderData();
+  const { watchlist: initialWatchlist } = Route.useLoaderData();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: watchlists } = useQuery(trpc.watchlist.myWatchlists.queryOptions());
+  const watchlist =
+    watchlists?.find((wl) => wl.id === initialWatchlist.id) ?? initialWatchlist;
+
   const uploadCover = useCoverUpload({ watchlist })
 
   const handleFile = (file: File | undefined) => {
@@ -72,8 +79,48 @@ function RouteComponent() {
             <p className="mt-1 text-sm text-muted-foreground">
               PNG, JPEG, or WebP. Up to 5MB.
             </p>
-            
 
+            <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center">
+              {/* Mini card preview */}
+              <div className="w-full max-w-56 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <img
+                    src={watchlist.coverImage ?? "/placeholder.svg"}
+                    alt={`Cover art for ${watchlist.name}`}
+                    className="size-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/0 to-black/0" />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-serif text-base font-semibold leading-tight text-balance">
+                    {watchlist.name}
+                  </h3>
+                </div>
+              </div>
+
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => handleFile(e.target.files?.[0])}
+                />
+                <Button
+                  variant="outline"
+                  disabled={uploadCover.isPending}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-1.5"
+                >
+                  {uploadCover.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Upload className="size-4" />
+                  )}
+                  {uploadCover.isPending ? "Uploading..." : "Upload new"}
+                </Button>
+              </div>
+            </div>
           </section>
         </main>
       </div>
