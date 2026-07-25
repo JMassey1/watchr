@@ -85,6 +85,7 @@ export const watchlistRouter = router({
 				.select({
 					id: user.id,
 					name: user.name,
+					role: watchlistMember.role,
 					image: user.image,
 				})
 				.from(watchlistMember)
