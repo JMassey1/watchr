@@ -17,16 +17,14 @@ export const user = pgTable("user", {
 		.$onUpdate(() => /* @__PURE__ */ new Date())
 		.notNull(),
 });
-export const userSelectSchema = createSelectSchema(user)
-	.omit({
-		email: true,
-		emailVerified: true,
-		createdAt: true,
-		updatedAt: true,
-	})
-	.partial({
-		image: true,
-	});
+export const userSelectSchema = createSelectSchema(user);
+export const publicUserSchema = userSelectSchema.pick({
+	id: true,
+	name: true,
+	image: true
+}).partial({
+	image: true
+})
 
 export const session = pgTable(
 	"session",

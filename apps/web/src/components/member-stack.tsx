@@ -1,13 +1,11 @@
-import {userSelectSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/auth";
 import {z} from "zod";
-import {Avatar, AvatarBadge, AvatarFallback, AvatarImage} from "@watch3r/ui/components/avatar";
-import {Check} from "lucide-react";
 import {cn} from "@watch3r/ui/lib/utils";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@watch3r/ui/components/tooltip";
 import {UserAvatar} from "@/components/user-avatar";
 
 export function MemberStack({users, showBadge = false, max = 4, size = 'sm'}: {
-	users: z.infer<typeof userSelectSchema>[]
+	users: z.infer<typeof publicUserSchema>[]
 	showBadge?: boolean
 	max?: number
 	size?: "sm" | "md"

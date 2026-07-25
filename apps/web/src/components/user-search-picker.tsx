@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {userSelectSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/auth";
 import {useQuery} from "@tanstack/react-query";
 import {trpc} from "@/utils/trpc";
 import {z} from "zod";
@@ -14,10 +14,10 @@ export function UserSearchPicker({watchlistId, placeholder, disabled, selected, 
 	watchlistId?: number            // forwarded to searchUsers to exclude existing members
 	placeholder?: string
 	disabled?: boolean
-	selected: z.infer<typeof userSelectSchema>[]
-	onSelectedChange: (user: z.infer<typeof userSelectSchema>[]) => void
+	selected: z.infer<typeof publicUserSchema>[]
+	onSelectedChange: (user: z.infer<typeof publicUserSchema>[]) => void
 }) {
-	function toggleInvite(user: z.infer<typeof userSelectSchema>) {
+	function toggleInvite(user: z.infer<typeof publicUserSchema>) {
 		const next = selected.some((u) => u.id === user.id)
 			? selected.filter((u) => u.id !== user.id)
 			: [...selected, user];
