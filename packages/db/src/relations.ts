@@ -59,7 +59,7 @@ export const watchlistRelations = defineRelations(schema, (r) => ({
 			from: r.watchlistItem.titleId,
 			to: r.title.id,
 		}),
-		addedBy: r.one.user({
+		addedByUser: r.one.user({
 			from: r.watchlistItem.addedBy,
 			to: r.user.id,
 		}),
