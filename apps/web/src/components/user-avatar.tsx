@@ -1,4 +1,4 @@
-import {userSelectSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/auth";
 import {z} from "zod";
 import {Avatar, AvatarBadge, AvatarFallback, AvatarImage} from "@watch3r/ui/components/avatar";
 import React from "react";
@@ -8,7 +8,7 @@ export function UserAvatar({className, user, showBadge = false, badgeIcon = <Che
 	className?: string
 	showBadge?: boolean
 	badgeIcon?: React.ReactNode
-	user: z.infer<typeof userSelectSchema>
+	user: z.infer<typeof publicUserSchema>
 }) {
 	return (
 		<Avatar className={className}>

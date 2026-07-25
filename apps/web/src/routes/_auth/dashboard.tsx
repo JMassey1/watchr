@@ -7,7 +7,7 @@ import {useMemo, useState} from "react";
 import {CreateListDialog} from "@/components/create-list-dialog";
 import {toast} from "sonner";
 import {WatchlistCard} from "@/components/watchlist-card";
-import {Clapperboard, Crown, Film, Plus, Search, Settings, Users} from "lucide-react";
+import {Clapperboard, Crown, Film, Plus, Search, Settings, Users, Wrench} from "lucide-react";
 
 export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
@@ -118,6 +118,14 @@ function RouteComponent() {
 					</div>
 
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+						{session.data?.user.role === "admin" && (
+							<Link to="/admin/dashboard">
+								<Button className="gap-1.5">
+									<Wrench className="size-4"/>
+									Admin Settings
+								</Button>
+							</Link>
+						)}
 						{/* Search Bar */}
 						<div className="relative sm:w-64">
 							<Search

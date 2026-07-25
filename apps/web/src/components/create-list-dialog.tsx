@@ -1,5 +1,5 @@
 import {watchlistInsertSchema} from "@watch3r/db/schema/watchlist";
-import {userSelectSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/auth";
 import {
 	Dialog,
 	DialogClose,
@@ -20,12 +20,12 @@ export function CreateListDialog({open, onOpenChange, onCreate}: {
 	onOpenChange: (open: boolean) => void
 	onCreate: ({watchlist, members}: {
 		watchlist: z.infer<typeof watchlistInsertSchema>
-		members: z.infer<typeof userSelectSchema>[]
+		members: z.infer<typeof publicUserSchema>[]
 	}) => void
 }) {
 	const [watchlistName, setWatchlistName] = useState("");
 	const [description, setDescription] = useState("");
-	const [members, setMembers] = useState<z.infer<typeof userSelectSchema>[]>([]);
+	const [members, setMembers] = useState<z.infer<typeof publicUserSchema>[]>([]);
 
 	function reset() {
 		setWatchlistName("");
