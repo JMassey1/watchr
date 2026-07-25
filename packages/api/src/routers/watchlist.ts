@@ -20,6 +20,27 @@ TODO:
 - Remove member (^^)
 */
 
+async function requireMembership(watchlistId: number, userId: string) {
+	const [membership] = await db
+		.select({ role: watchlistMember.role })
+		.from(watchlistMember)
+		.where(
+			and(
+				eq(watchlistMember.watchlistId, watchlistId),
+				eq(watchlistMember.userId, userId)
+			)
+		)
+		.limit(1);
+
+	if (!membership) {
+		throw new TRPCError({
+			code: "FORBIDDEN",
+			message: "You are not a member of this watchlist"
+		});
+	}
+	return membership;
+}
+
 export const watchlistRouter = router({
 	myWatchlistCount: protectedProcedure.query(async ({ ctx }) => {
 		const [row] = await db
@@ -143,27 +164,7 @@ export const watchlistRouter = router({
 		}))
 		.mutation(async ({ ctx, input }) => {
 			const userId = ctx.session.user.id;
-
-			const [membership] = await db
-				.select({ role: watchlistMember.role })
-				.from(watchlistMember)
-				.where(
-					and(
-						eq(watchlistMember.watchlistId, input.watchlistId),
-						eq(watchlistMember.userId, userId)
-					)
-				)
-				.limit(1);
-
-			if (!membership ||
-				(membership.role !== watchlistRoles.Owner &&
-					membership.role !== watchlistRoles.Admin)
-			) {
-				throw new TRPCError({
-					code: "FORBIDDEN",
-					message: "You do not have permission to update this watchlist"
-				});
-			}
+			await requireMembership(input.watchlistId, userId);
 
 			const [updated] = await db
 				.update(watchlist)
