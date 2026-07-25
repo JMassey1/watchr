@@ -6,11 +6,15 @@ import {
 	watchlistMember,
 	watchlistInsertSchema,
 	watchlistMemberInsertSchema,
-	watchlistRoles, watchlistSelectSchema
+	watchlistRoles, watchlistSelectSchema,
+	title,
+	watchlistItem,
+	mediaTypeEnum,
 } from "@watch3r/db/schema/watchlist";
 import {z} from "zod";
 import {TRPCError} from "@trpc/server";
 import {user} from "@watch3r/db/schema/auth";
+import {searchTitles, getTitleDetails} from "@watch3r/tmdb";
 
 
 /*
@@ -18,6 +22,7 @@ TODO:
 - Delete list (needs to check role of user, admin+ to do it)
 - Add member (^^)
 - Remove member (^^)
+- Item follow-ups: setWatched, removeItem
 */
 
 async function requireMembership(watchlistId: number, userId: string) {
@@ -180,5 +185,101 @@ export const watchlistRouter = router({
 			}
 
 			return updated;
+		}),
+
+	searchTitles: protectedProcedure
+		.input(z.object({ query: z.string().min(1) }))
+		.query(async ({ input }) => {
+			return searchTitles(input.query);
+		}),
+
+	addItem: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+			tmdbId: z.number().int().positive(),
+			mediaType: z.enum(mediaTypeEnum.enumValues),
+		}))
+		.mutation(async ({ ctx, input }) => {
+			const userId = ctx.session.user.id;
+			await requireMembership(input.watchlistId, userId);
+
+			const details = await getTitleDetails(input.tmdbId, input.mediaType);
+
+			return db.transaction(async (tx) => {
+				const [titleRow] = await tx
+					.insert(title)
+					.values({
+						tmdbId: details.tmdbId,
+						mediaType: details.mediaType,
+						name: details.title,
+						releaseYear: details.year,
+						posterPath: details.posterPath,
+						overview: details.overview,
+						runtime: details.runtime,
+					})
+					.onConflictDoUpdate({
+						target: [title.tmdbId, title.mediaType],
+						set: {
+							name: details.title,
+							releaseYear: details.year,
+							posterPath: details.posterPath,
+							overview: details.overview,
+							runtime: details.runtime,
+						},
+					})
+					.returning();
+
+				if (!titleRow) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "Failed to persist title",
+					});
+				}
+
+				await tx
+					.insert(watchlistItem)
+					.values({
+						watchlistId: input.watchlistId,
+						titleId: titleRow.id,
+						addedBy: userId,
+					})
+					.onConflictDoNothing();
+
+				return { titleId: titleRow.id };
+			});
+		}),
+	// List the titles on a watchlist, shaped to what the UI renders.
+	getItems: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+		}))
+		.query(async ({ ctx, input }) => {
+			await requireMembership(input.watchlistId, ctx.session.user.id);
+
+			const rows = await db
+				.select({
+					titleId: title.id,
+					name: title.name,
+					year: title.releaseYear,
+					mediaType: title.mediaType,
+					posterPath: title.posterPath,
+					runtime: title.runtime,
+					watched: watchlistItem.watched,
+					addedAt: watchlistItem.addedAt,
+				})
+				.from(watchlistItem)
+				.innerJoin(title, eq(watchlistItem.titleId, title.id))
+				.where(eq(watchlistItem.watchlistId, input.watchlistId));
+
+			// Map TMDB's 'tv' to the UI's 'series' vocabulary.
+			return rows.map((r) => ({
+				id: r.titleId,
+				title: r.name,
+				year: r.year,
+				kind: r.mediaType === "tv" ? ("series" as const) : ("movie" as const),
+				posterPath: r.posterPath,
+				runtime: r.runtime,
+				watched: r.watched,
+			}));
 		})
 })

@@ -89,6 +89,7 @@
         "@watch3r/db": "workspace:*",
         "@watch3r/env": "workspace:*",
         "@watch3r/storage": "workspace:*",
+        "@watch3r/tmdb": "workspace:*",
         "dotenv": "catalog:",
         "superjson": "^2.2.6",
         "zod": "catalog:",
@@ -154,6 +155,18 @@
         "@aws-sdk/client-s3": "catalog:",
         "@aws-sdk/s3-request-presigner": "catalog:",
         "@watch3r/env": "workspace:*",
+      },
+      "devDependencies": {
+        "@watch3r/config": "workspace:*",
+        "typescript": "^6",
+      },
+    },
+    "packages/tmdb": {
+      "name": "@watch3r/tmdb",
+      "version": "0.0.0",
+      "dependencies": {
+        "@watch3r/env": "workspace:*",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@watch3r/config": "workspace:*",
@@ -1084,6 +1097,8 @@
     "@watch3r/env": ["@watch3r/env@workspace:packages/env"],
 
     "@watch3r/storage": ["@watch3r/storage@workspace:packages/storage"],
+
+    "@watch3r/tmdb": ["@watch3r/tmdb@workspace:packages/tmdb"],
 
     "@watch3r/ui": ["@watch3r/ui@workspace:packages/ui"],
 

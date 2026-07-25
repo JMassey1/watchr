@@ -31,7 +31,8 @@ export const watchlistRelations = defineRelations(schema, (r) => ({
 			from: r.watchlist.ownerId,
 			to: r.user.id,
 		}),
-		members: r.many.watchlistMember()
+		members: r.many.watchlistMember(),
+		items: r.many.watchlistItem(),
 	},
 
 	watchlistMember: {
@@ -43,6 +44,25 @@ export const watchlistRelations = defineRelations(schema, (r) => ({
 			from: r.watchlistMember.userId,
 			to: r.user.id
 		})
+	},
+
+	title: {
+		watchlistItems: r.many.watchlistItem(),
+	},
+
+	watchlistItem: {
+		watchlist: r.one.watchlist({
+			from: r.watchlistItem.watchlistId,
+			to: r.watchlist.id,
+		}),
+		title: r.one.title({
+			from: r.watchlistItem.titleId,
+			to: r.title.id,
+		}),
+		addedBy: r.one.user({
+			from: r.watchlistItem.addedBy,
+			to: r.user.id,
+		}),
 	}
 }))
 
