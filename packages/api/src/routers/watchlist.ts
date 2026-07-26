@@ -68,6 +68,7 @@ export const watchlistRouter = router({
 				.select({
 					id: watchlist.id,
 					name: watchlist.name,
+					description: watchlist.description,
 					ownerId: watchlist.ownerId,
 					coverImage: watchlist.coverImage,
 					updatedAt: watchlist.updatedAt,
