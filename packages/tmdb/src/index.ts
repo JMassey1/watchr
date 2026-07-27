@@ -12,7 +12,7 @@ export type TmdbTitle = {
 	year: number | null;
 	posterPath: string | null;
 	overview: string | null;
-	runtime: number | null;
+	runtime: string | null;
 };
 
 async function tmdbFetch<T>(
@@ -97,6 +97,8 @@ const detailsSchema = z.object({
 	overview: z.string().nullable().optional(),
 	runtime: z.number().nullable().optional(),
 	episode_run_time: z.array(z.number()).optional(),
+	number_of_episodes: z.number().optional(),
+	number_of_seasons: z.number().optional(),
 });
 
 export async function getTitleDetails(
@@ -112,7 +114,9 @@ export async function getTitleDetails(
 		year: yearFromDate(d.release_date ?? d.first_air_date),
 		posterPath: d.poster_path ?? null,
 		overview: d.overview ?? null,
-		runtime: d.runtime ?? d.episode_run_time?.[0] ?? null,
+		runtime: mediaType === "tv"
+					? d.number_of_seasons ? `${d.number_of_seasons} seasons` : null
+					: d.runtime ? `${d.runtime} min` : null,
 	};
 }
 

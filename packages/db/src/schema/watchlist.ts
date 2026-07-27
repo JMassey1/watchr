@@ -50,7 +50,7 @@ export const title = pgTable("title", {
     releaseYear: integer("release_year"),
     posterPath: text("poster_path"),
     overview: text("overview"),
-    runtime: integer("runtime"),
+    runtime: text("runtime"),
     createdAt: timestamp("created_at", {mode: "date", withTimezone: true}).notNull().defaultNow(),
 }, (t) => [
     unique("title_tmdb_unique").on(t.tmdbId, t.mediaType),
@@ -61,7 +61,7 @@ export const titleSelectSchema = createSelectSchema(title);
 export const watchlistItem = pgTable("watchlist_items", {
     watchlistId: integer("watchlist_id").notNull().references(() => watchlist.id, {onDelete: "cascade"}),
     titleId: integer("title_id").notNull().references(() => title.id, {onDelete: "cascade"}),
-    addedBy: text("added_by").notNull().references(() => user.id, {onDelete: "cascade"}),
+    addedBy: text("added_by").notNull().references(() => user.id, {onDelete: "cascade"}), //TODO: Maybe keep titles but make a "Deleted User" to take ownership
     watched: boolean("watched").notNull().default(false),
     addedAt: timestamp("added_at", {mode: "date", withTimezone: true}).notNull().defaultNow(),
 }, (t) => [
