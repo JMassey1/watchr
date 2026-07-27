@@ -2,7 +2,6 @@
   <configuration default="false" name="debug" type="BunRunConfiguration" folderName="Server">
     <option name="program" value="apps/server/src/index.ts" />
     <option name="runtimeParameters" value="--watch --env-file=./apps/server/.env" />
-    <option name="stopOnEntry" value="true" />
     <option name="workingDirectory" value="$PROJECT_DIR$" />
     <method v="2" />
   </configuration>
