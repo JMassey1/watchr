@@ -48,7 +48,7 @@ jobs:
       env:
         DOCKER_HOST: tcp://localhost:2375
       options: >-
-        --network=host
+        --add-host=dind.docker.internal:host-gateway
         --add-host=orbiter.taild7aa61.ts.net:100.97.177.60
     steps:
       - name: Clone repository at this commit
