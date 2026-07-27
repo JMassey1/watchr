@@ -17,7 +17,7 @@ export function MemberStack({users, showBadge = false, max = 4, size = 'sm'}: {
 	return (
 		<div className="flex items-center -space-x-2">
 			{shown.map((user) => (
-				<Tooltip>
+				<Tooltip key={`memstack-tooltip-user-${user.id}`}>
 					<TooltipTrigger>
 						<UserAvatar user={user} showBadge={showBadge} className={dim} />
 					</TooltipTrigger>

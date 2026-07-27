@@ -5,9 +5,9 @@ import {Button, buttonVariants} from "@watch3r/ui/components/button";
 import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
 import {queryClient, trpc} from "@/utils/trpc";
 import {MemberStack} from "@/components/member-stack";
+import {AddTitleDialog} from "@/components/add-title-dialog";
 import {formatDateOnly} from "@/utils/dates";
-import {Field, FieldContent, FieldLabel} from "@watch3r/ui/components/field";
-import {Switch} from "@watch3r/ui/components/switch";
+import {DisplayCard} from "@/components/display-card";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	loader: async ({params}) => {
@@ -32,29 +32,6 @@ export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	component: RouteComponent,
 })
 
-/*
- * TODO: Watchlist items don't exist in the schema/API yet.
- *  Replace this local type + TEST_ITEMS with a real tRPC query
- *  (e.g. trpc.watchlist.getItems) once the backend is in place.
- */
-type WatchlistItem = {
-	id: number;
-	title: string;
-	year: number;
-	kind: "movie" | "series";
-	runtime: string;
-	watched: boolean;
-};
-
-const TEST_ITEMS: WatchlistItem[] = [
-	{id: 1, title: "Dune: Part Two", year: 2024, kind: "movie", runtime: "2h 46m", watched: true},
-	{id: 2, title: "The Bear", year: 2022, kind: "series", runtime: "4 seasons", watched: false},
-	{id: 3, title: "Everything Everywhere All at Once", year: 2022, kind: "movie", runtime: "2h 19m", watched: true},
-	{id: 4, title: "Severance", year: 2022, kind: "series", runtime: "2 seasons", watched: false},
-	{id: 5, title: "Oppenheimer", year: 2023, kind: "movie", runtime: "3h 0m", watched: false},
-	{id: 6, title: "Poor Things", year: 2023, kind: "movie", runtime: "2h 21m", watched: true},
-];
-
 type ItemFilter = "all" | "watched" | "unwatched";
 const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 	{key: "all", label: "All titles"},
@@ -66,18 +43,19 @@ function RouteComponent() {
 	const {watchlist} = Route.useLoaderData();
 	const {session} = Route.useRouteContext();
 	const [filter, setFilter] = useState<ItemFilter>("all");
-	const [showTestData, setShowTestData] = useState<boolean>(false);
 	const [itemQuery, setItemQuery] = useState<string>("");
+	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
 
 	const watchlistMembers = useQuery(
 		trpc.watchlist.getWatchlistMembers.queryOptions({watchlistId: watchlist.id})
 	);
+	const itemsQuery = useQuery(
+		trpc.watchlist.getItems.queryOptions({watchlistId: watchlist.id})
+	);
 	const isOwner = session.data?.user.id === watchlist.ownerId;
 	const isAdmin = session.data?.user.id === watchlistMembers.data?.some((m) => m.id === session.data?.user.id && m.role === "admin");
 
-
-	// TODO: replace TEST_ITEMS with a real query once items are modelled.
-	const items = showTestData ? TEST_ITEMS : [];
+	const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 	const watchedCount = items.filter((item) => item.watched).length;
 	const pctWatched = items.length > 0 ? Math.round((watchedCount / items.length) * 100) : 0;
 
@@ -87,10 +65,10 @@ function RouteComponent() {
 		return items.filter((item) => {
 			if (filter === "watched" && !item.watched) return false;
 			if (filter === "unwatched" && item.watched) return false;
-			return !(q && !item.title.toLowerCase().includes(q));
+			return !(q && !item.name.toLowerCase().includes(q));
 
 		});
-	}, [filter, itemQuery]);
+	}, [items, filter, itemQuery]);
 
 	const stats = [
 		{label: "Titles", value: items.length, icon: Clapperboard},
@@ -152,7 +130,7 @@ function RouteComponent() {
 								Settings
 							</Link>
 						)}
-						<Button className="gap-1.5">
+						<Button onClick={() => setAddTitleOpen(true)} className="gap-1.5">
 							<Plus className="size-4"/>
 							Add title
 						</Button>
@@ -209,12 +187,6 @@ function RouteComponent() {
 					</div>
 
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-						{/*//TODO: Remove this once we have real items in the schema/API*/}
-						<Field orientation="horizontal" className="max-w-sm">
-							<Switch id="switch-testdata-sm" size="sm" checked={showTestData} onCheckedChange={setShowTestData} />
-							<FieldLabel htmlFor="switch-testdata-sm">Test Data</FieldLabel>
-						</Field>
-
 						<div className="relative sm:w-64">
 							<Search
 								className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/>
@@ -233,44 +205,23 @@ function RouteComponent() {
 				{filteredItems.length > 0 ? (
 					<section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
 						{filteredItems.map((item) => (
-							<article
-								key={item.id}
-								className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg hover:shadow-black/5"
-							>
-								<div className="relative aspect-16/10 overflow-hidden">
-									<img
-										src="/placeholder.svg"
-										alt={`Poster for ${item.title}`}
-										className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-									/>
-									<div
-										className="absolute inset-0 bg-linear-to-t from-black/55 via-black/0 to-black/0"/>
-									<span
-										className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-card/90 px-2.5 py-1 text-xs font-semibold capitalize text-card-foreground backdrop-blur-sm">
-										{item.kind}
-									</span>
-									{item.watched && (
-										<span
-											className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground backdrop-blur-sm">
-											<Check className="size-3.5" aria-hidden="true"/>
-											Watched
-										</span>
-									)}
-								</div>
-
-								<div className="flex flex-1 flex-col gap-4 p-5">
+							<DisplayCard
+								key={`wl-item-card-${item.id}`}
+								coverImage={item.posterUrl}
+								badge={item.mediaType === "movie" ? "Movie" : "TV"}
+								cornerLabel={item.watched ? "Watched" : null}
+								footer={(
 									<div className="space-y-1.5">
-										<h3 className="font-serif text-lg font-semibold leading-tight text-balance">
-											{item.title}
-										</h3>
+										<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
 										<p className="text-sm text-muted-foreground">
 											{item.year} &middot; {item.runtime}
 										</p>
 									</div>
-								</div>
-							</article>
+								)}
+							/>
 						))}
 					</section>
+
 				) : (
 					<div
 						className="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 px-6 py-16 text-center">
@@ -283,13 +234,19 @@ function RouteComponent() {
 								? "Try a different search or filter, or add a new title to this list."
 								: "This watchlist is empty. Add your first title to get watching."}
 						</p>
-						<Button className="mt-4 gap-1.5">
+						<Button onClick={() => setAddTitleOpen(true)} className="mt-4 gap-1.5">
 							<Plus className="size-4"/>
 							Add title
 						</Button>
 					</div>
 				)}
 			</main>
+
+			<AddTitleDialog
+				watchlistId={watchlist.id}
+				open={addTitleOpen}
+				onOpenChange={setAddTitleOpen}
+			/>
 		</div>
 	)
 }

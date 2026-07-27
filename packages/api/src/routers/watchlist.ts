@@ -14,7 +14,7 @@ import {
 import {z} from "zod";
 import {TRPCError} from "@trpc/server";
 import {user} from "@watch3r/db/schema/auth";
-import {searchTitles, getTitleDetails} from "@watch3r/tmdb";
+import {searchTitles, getTitleDetails, posterUrl} from "@watch3r/tmdb";
 
 
 /*
@@ -191,7 +191,17 @@ export const watchlistRouter = router({
 	searchTitles: protectedProcedure
 		.input(z.object({ query: z.string().min(1) }))
 		.query(async ({ input }) => {
-			return searchTitles(input.query);
+			const results = await searchTitles(input.query);
+			// Build poster URLs server-side (env is server-only); the browser
+			// loads these public CDN links directly.
+			return results.map((r) => ({
+				tmdbId: r.tmdbId,
+				mediaType: r.mediaType,
+				title: r.title,
+				year: r.year,
+				overview: r.overview,
+				posterUrl: posterUrl(r.posterPath, "w200"),
+			}));
 		}),
 
 	addItem: protectedProcedure
@@ -259,7 +269,7 @@ export const watchlistRouter = router({
 
 			const rows = await db
 				.select({
-					titleId: title.id,
+					id: title.id,
 					name: title.name,
 					year: title.releaseYear,
 					mediaType: title.mediaType,
@@ -267,20 +277,18 @@ export const watchlistRouter = router({
 					runtime: title.runtime,
 					watched: watchlistItem.watched,
 					addedAt: watchlistItem.addedAt,
+					addedBy: watchlistItem.addedBy
 				})
 				.from(watchlistItem)
 				.innerJoin(title, eq(watchlistItem.titleId, title.id))
 				.where(eq(watchlistItem.watchlistId, input.watchlistId));
 
-			// Map TMDB's 'tv' to the UI's 'series' vocabulary.
-			return rows.map((r) => ({
-				id: r.titleId,
-				title: r.name,
-				year: r.year,
-				kind: r.mediaType === "tv" ? ("series" as const) : ("movie" as const),
-				posterPath: r.posterPath,
-				runtime: r.runtime,
-				watched: r.watched,
-			}));
+			return rows.map((r) => {
+				const {posterPath, ...row} = r;
+				return {
+					...row,
+					posterUrl: posterUrl(r.posterPath, "w500")
+				}
+			})
 		})
 })
