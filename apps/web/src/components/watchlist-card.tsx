@@ -45,12 +45,12 @@ export function WatchlistCard({watchlist}: { watchlist: z.infer<typeof watchlist
 			cornerLabel={`${total} titles`}
 			progress={{ watched: 0, total}}
 			footer={(
-				<>
-				<MemberStack users={watchlistMembers.data ?? []} size="sm" />
-				<span className="text-xs text-muted-foreground">
-					Updated {formatDateOnly(watchlist.updatedAt)}
-				</span>
-				</>
+				<div className="flex items-center justify-between">
+					<MemberStack users={watchlistMembers.data ?? []} size="sm"/>
+					<span className="text-xs text-muted-foreground">
+						Updated {formatDateOnly(watchlist.updatedAt)}
+					</span>
+				</div>
 
 			)}
 		/>

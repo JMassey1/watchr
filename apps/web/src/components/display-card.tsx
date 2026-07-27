@@ -4,7 +4,7 @@ import {Check} from "lucide-react";
 
 type DisplayCardProps = {
 	coverImage?: string | null;
-	title: string;
+	title?: string | null;
 	description?: string | null;
 	badge?: ReactNode;
 	cornerLabel?: ReactNode;
@@ -18,6 +18,10 @@ export function DisplayCard(props: DisplayCardProps) {
 	const progressPercent = progress && progress.total > 0
 		? Math.round((progress.watched / progress.total) * 100)
 		: 0;
+
+	const footerClassname = (title || description || progress)
+		? "mt-auto border-t border-border pt-4"
+		: "mt-auto"
 
 	const card = (
 		<article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-lg hover:shadow-black/5">
@@ -52,12 +56,16 @@ export function DisplayCard(props: DisplayCardProps) {
 			<div className="flex flex-1 flex-col gap-4 p-5">
 
 				{/* Title/Description */}
-				<div className="space-y-1.5">
-					<h3 className="font-seif text-lg font-semibold-leading-tight text-balance">{title}</h3>
-					{description && (
-						<p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
-					)}
-				</div>
+				{(title || description) && (
+					<div className="space-y-1.5">
+						{title && (
+							<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{title}</h3>
+						)}
+						{description && (
+							<p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
+						)}
+					</div>
+				)}
 
 				{/* Progress */}
 				{progress && (
@@ -67,14 +75,14 @@ export function DisplayCard(props: DisplayCardProps) {
 								<Check className="size-3.5 text-primary" aria-hidden="true" />
 								{progress.watched} of {progress.total} watched
 							</span>
-							<span>{progressPercent}</span>
+							<span>{progressPercent}%</span>
 						</div>
 					</div>
 				)}
 
 				{/* Footer */}
 				{footer && (
-					<div className="mt-auto flex items-center justify-between border-t border-border pt-4">
+					<div className={footerClassname}>
 						{footer}
 					</div>
 				)}
