@@ -1,0 +1,102 @@
+# Build the watch3r server + web images and deploy them to the `test` region.
+#
+# Trigger: push to the `test` branch (and manual dispatch).
+# Flow: build+push images to the Forgejo registry, then hit the Portainer
+# stack webhook, which re-pulls the `test` tag and redeploys.
+#
+# Runner notes (Docker-in-Docker setup):
+#   - The job runs in an image that ships the docker CLI + node + git.
+#   - DOCKER_HOST points the job at the dind daemon; --add-host wires up name
+#     resolution for both the dind daemon and the Tailscale registry host.
+#   - actions/checkout is NOT used: the runner registered against the internal
+#     URL (http://forgejo:3000), which dind job containers can't reach, so we
+#     clone directly from the Tailscale host instead.
+#
+# Required repo Actions secrets:
+#   REGISTRY_USER          - Forgejo user with registry + repo read/write
+#   REGISTRY_TOKEN         - matching access token
+#   PORTAINER_WEBHOOK_TEST - full Portainer stack webhook URL
+#
+# Server-side prerequisite: the `docker-in-docker` service in the Forgejo
+# compose must have `extra_hosts: ["orbiter.taild7aa61.ts.net:100.97.177.60"]`
+# so the dind daemon can resolve the registry host when pushing.
+
+name: deploy-test
+
+on:
+  push:
+    branches: [test]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-test
+  cancel-in-progress: false
+
+env:
+  REGISTRY: orbiter.taild7aa61.ts.net
+  HOST_TS_IP: 100.97.177.60
+  IMAGE_NAMESPACE: jordan
+  REPO_SLUG: jordan/watchr
+  # Must match SERVER_PORT of the test region — baked into the web bundle.
+  VITE_SERVER_URL: http://orbiter.taild7aa61.ts.net:13000
+
+jobs:
+  build-and-deploy:
+    runs-on: docker
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
+      env:
+        DOCKER_HOST: tcp://dind.docker.internal:2375
+      options: >-
+        --add-host=dind.docker.internal:host-gateway
+        --add-host=orbiter.taild7aa61.ts.net:100.97.177.60
+    steps:
+      - name: Clone repository at this commit
+        run: |
+          AUTH=$(printf '%s:%s' "${{ secrets.REGISTRY_USER }}" "${{ secrets.REGISTRY_TOKEN }}" | base64 | tr -d '\n')
+          git -c http.extraheader="Authorization: Basic ${AUTH}" \
+            clone --no-checkout "https://${REGISTRY}/${REPO_SLUG}.git" .
+          git checkout --detach "${GITHUB_SHA}"
+
+      - name: Log in to Forgejo registry
+        run: |
+          echo "${{ secrets.REGISTRY_TOKEN }}" | \
+            docker login "${REGISTRY}" -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+
+      - name: Set image refs
+        id: refs
+        run: |
+          BASE="${REGISTRY}/${IMAGE_NAMESPACE}"
+          echo "server=${BASE}/watch3r-server" >> "$GITHUB_OUTPUT"
+          echo "web=${BASE}/watch3r-web" >> "$GITHUB_OUTPUT"
+          echo "sha=${GITHUB_SHA:0:12}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push server image
+        env:
+          DOCKER_BUILDKIT: "1"
+        run: |
+          docker build \
+            --file apps/server/Dockerfile \
+            --tag "${{ steps.refs.outputs.server }}:test" \
+            --tag "${{ steps.refs.outputs.server }}:test-${{ steps.refs.outputs.sha }}" \
+            .
+          docker push "${{ steps.refs.outputs.server }}:test"
+          docker push "${{ steps.refs.outputs.server }}:test-${{ steps.refs.outputs.sha }}"
+
+      - name: Build & push web image
+        env:
+          DOCKER_BUILDKIT: "1"
+        run: |
+          docker build \
+            --file apps/web/Dockerfile \
+            --build-arg VITE_SERVER_URL="${VITE_SERVER_URL}" \
+            --tag "${{ steps.refs.outputs.web }}:test" \
+            --tag "${{ steps.refs.outputs.web }}:test-${{ steps.refs.outputs.sha }}" \
+            .
+          docker push "${{ steps.refs.outputs.web }}:test"
+          docker push "${{ steps.refs.outputs.web }}:test-${{ steps.refs.outputs.sha }}"
+
+      - name: Trigger Portainer redeploy
+        run: |
+          curl -fsS -X POST "${{ secrets.PORTAINER_WEBHOOK_TEST }}"
+          echo "Portainer redeploy triggered."
