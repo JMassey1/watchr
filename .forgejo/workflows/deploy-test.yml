@@ -38,7 +38,7 @@ env:
   IMAGE_NAMESPACE: jordan
   REPO_SLUG: jordan/watchr
   # Must match SERVER_PORT of the test region — baked into the web bundle.
-  VITE_SERVER_URL: http://orbiter.taild7aa61.ts.net:13000
+  VITE_SERVER_URL: https://orbiter.taild7aa61.ts.net:13000
 
 jobs:
   build-and-deploy:
