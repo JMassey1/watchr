@@ -72,7 +72,7 @@ export function AddTitleDialog({watchlistId, open, onOpenChange}: {
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="flex flex-col gap-4 p-6">
+				<div className="flex flex-col gap-4 overflow-hidden px-6 pb-6">
 					{/* Search field */}
 					<div className="relative">
 						<Search
@@ -123,7 +123,7 @@ export function AddTitleDialog({watchlistId, open, onOpenChange}: {
 						)}
 
 						{/* Result rows */}
-						<ul className="flex max-h-96 flex-col gap-1 overflow-y-auto">
+						<ul className="flex max-h-96 flex-col gap-1 overflow-y-auto scrollbar-hide">
 							{isSearchable && results.map((result) => {
 								const isAdding = addingId === result.tmdbId;
 								return (

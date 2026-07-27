@@ -4,6 +4,28 @@
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
 
+@layer utilities {
+  .scrollbar-hide {
+    /* Firefox */
+    scrollbar-width: none;
+
+    /* Safari and Chrome */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .scrollbar-default {
+    /* Firefox */
+    scrollbar-width: auto;
+
+    /* Safari and Chrome */
+    &::-webkit-scrollbar {
+      display: block;
+    }
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
