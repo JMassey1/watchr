@@ -8,7 +8,10 @@ RUN --mount=type=cache,target=/root/.bun/install/cache bun install
 
 ENV NODE_ENV=production
 RUN cd apps/server && bun run build
-ENV SKIP_ENV_VALIDATION=false
+# Unset (not "false"): t3-env treats any non-empty string, including "false",
+# as truthy, so `SKIP_ENV_VALIDATION=false` would keep validation disabled.
+# Unsetting it re-enables runtime env validation so missing secrets fail loudly.
+ENV SKIP_ENV_VALIDATION=
 
 EXPOSE 3000
 
