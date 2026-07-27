@@ -19,6 +19,7 @@
     "@watch3r/db": "workspace:*",
     "@watch3r/env": "workspace:*",
     "@watch3r/storage": "workspace:*",
+    "@watch3r/tmdb": "workspace:*",
     "dotenv": "catalog:",
     "superjson": "^2.2.6",
     "zod": "catalog:"

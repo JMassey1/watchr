@@ -1,0 +1,31 @@
+{
+  // Pulled all of this mostly from https://opencode.ai/docs/config/ and stinky AI :(
+  "$schema": "https://opencode.ai/config.json",
+  "model": "openrouter/anthropic/claude-opus-4-8",
+  "agent": {
+    "build": {
+      "model": "openrouter/openai/claude-opus-4-8",
+    },
+    "worker": {
+      "description": "Executes well-specified, narrowly scoped implementation tasks. Use for file edits, boilerplate, test writing, mechanical refactors, and running commands. Requires an explicit spec.",
+      "mode": "subagent",
+      "model": "openrouter/z-ai/glm-5.2",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "webfetch": false
+      }
+    },
+    "scout": {
+      "description": "Read-only codebase exploration. Use to locate files, trace call sites, and summarize existing patterns. Returns findings, never edits.",
+      "mode": "subagent",
+      "model": "openrouter/z-ai/glm-5.2",
+      "tools": {
+        "write": false,
+        "edit": false,
+        "bash": false
+      }
+    }
+  }
+}

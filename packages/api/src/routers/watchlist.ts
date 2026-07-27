@@ -6,11 +6,15 @@ import {
 	watchlistMember,
 	watchlistInsertSchema,
 	watchlistMemberInsertSchema,
-	watchlistRoles, watchlistSelectSchema
+	watchlistRoles, watchlistSelectSchema,
+	title,
+	watchlistItem,
+	mediaTypeEnum,
 } from "@watch3r/db/schema/watchlist";
 import {z} from "zod";
 import {TRPCError} from "@trpc/server";
 import {user} from "@watch3r/db/schema/auth";
+import {searchTitles, getTitleDetails, posterUrl} from "@watch3r/tmdb";
 
 
 /*
@@ -18,7 +22,29 @@ TODO:
 - Delete list (needs to check role of user, admin+ to do it)
 - Add member (^^)
 - Remove member (^^)
+- Item follow-ups: setWatched, removeItem
 */
+
+async function requireMembership(watchlistId: number, userId: string) {
+	const [membership] = await db
+		.select({ role: watchlistMember.role })
+		.from(watchlistMember)
+		.where(
+			and(
+				eq(watchlistMember.watchlistId, watchlistId),
+				eq(watchlistMember.userId, userId)
+			)
+		)
+		.limit(1);
+
+	if (!membership) {
+		throw new TRPCError({
+			code: "FORBIDDEN",
+			message: "You are not a member of this watchlist"
+		});
+	}
+	return membership;
+}
 
 export const watchlistRouter = router({
 	myWatchlistCount: protectedProcedure.query(async ({ ctx }) => {
@@ -42,6 +68,7 @@ export const watchlistRouter = router({
 				.select({
 					id: watchlist.id,
 					name: watchlist.name,
+					description: watchlist.description,
 					ownerId: watchlist.ownerId,
 					coverImage: watchlist.coverImage,
 					updatedAt: watchlist.updatedAt,
@@ -85,6 +112,7 @@ export const watchlistRouter = router({
 				.select({
 					id: user.id,
 					name: user.name,
+					role: watchlistMember.role,
 					image: user.image,
 				})
 				.from(watchlistMember)
@@ -142,27 +170,7 @@ export const watchlistRouter = router({
 		}))
 		.mutation(async ({ ctx, input }) => {
 			const userId = ctx.session.user.id;
-
-			const [membership] = await db
-				.select({ role: watchlistMember.role })
-				.from(watchlistMember)
-				.where(
-					and(
-						eq(watchlistMember.watchlistId, input.watchlistId),
-						eq(watchlistMember.userId, userId)
-					)
-				)
-				.limit(1);
-
-			if (!membership ||
-				(membership.role !== watchlistRoles.Owner &&
-					membership.role !== watchlistRoles.Admin)
-			) {
-				throw new TRPCError({
-					code: "FORBIDDEN",
-					message: "You do not have permission to update this watchlist"
-				});
-			}
+			await requireMembership(input.watchlistId, userId);
 
 			const [updated] = await db
 				.update(watchlist)
@@ -178,5 +186,109 @@ export const watchlistRouter = router({
 			}
 
 			return updated;
+		}),
+
+	searchTitles: protectedProcedure
+		.input(z.object({ query: z.string().min(1) }))
+		.query(async ({ input }) => {
+			const results = await searchTitles(input.query);
+			// Build poster URLs server-side (env is server-only); the browser
+			// loads these public CDN links directly.
+			return results.map((r) => ({
+				tmdbId: r.tmdbId,
+				mediaType: r.mediaType,
+				title: r.title,
+				year: r.year,
+				overview: r.overview,
+				posterUrl: posterUrl(r.posterPath, "w200"),
+			}));
+		}),
+
+	addItem: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+			tmdbId: z.number().int().positive(),
+			mediaType: z.enum(mediaTypeEnum.enumValues),
+		}))
+		.mutation(async ({ ctx, input }) => {
+			const userId = ctx.session.user.id;
+			await requireMembership(input.watchlistId, userId);
+
+			const details = await getTitleDetails(input.tmdbId, input.mediaType);
+
+			return db.transaction(async (tx) => {
+				const [titleRow] = await tx
+					.insert(title)
+					.values({
+						tmdbId: details.tmdbId,
+						mediaType: details.mediaType,
+						name: details.title,
+						releaseYear: details.year,
+						posterPath: details.posterPath,
+						overview: details.overview,
+						runtime: details.runtime,
+					})
+					.onConflictDoUpdate({
+						target: [title.tmdbId, title.mediaType],
+						set: {
+							name: details.title,
+							releaseYear: details.year,
+							posterPath: details.posterPath,
+							overview: details.overview,
+							runtime: details.runtime,
+						},
+					})
+					.returning();
+
+				if (!titleRow) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "Failed to persist title",
+					});
+				}
+
+				await tx
+					.insert(watchlistItem)
+					.values({
+						watchlistId: input.watchlistId,
+						titleId: titleRow.id,
+						addedBy: userId,
+					})
+					.onConflictDoNothing();
+
+				return { titleId: titleRow.id };
+			});
+		}),
+	// List the titles on a watchlist, shaped to what the UI renders.
+	getItems: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+		}))
+		.query(async ({ ctx, input }) => {
+			await requireMembership(input.watchlistId, ctx.session.user.id);
+
+			const rows = await db
+				.select({
+					id: title.id,
+					name: title.name,
+					year: title.releaseYear,
+					mediaType: title.mediaType,
+					posterPath: title.posterPath,
+					runtime: title.runtime,
+					watched: watchlistItem.watched,
+					addedAt: watchlistItem.addedAt,
+					addedBy: watchlistItem.addedBy
+				})
+				.from(watchlistItem)
+				.innerJoin(title, eq(watchlistItem.titleId, title.id))
+				.where(eq(watchlistItem.watchlistId, input.watchlistId));
+
+			return rows.map((r) => {
+				const {posterPath, ...row} = r;
+				return {
+					...row,
+					posterUrl: posterUrl(r.posterPath, "w500")
+				}
+			})
 		})
 })

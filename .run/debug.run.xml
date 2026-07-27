@@ -1,0 +1,20 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="debug" type="BunRunConfiguration" folderName="Server">
+    <option name="program" value="apps/server/src/index.ts" />
+    <option name="runtimeParameters" value="--watch --env-file=./apps/server/.env" />
+    <option name="workingDirectory" value="$PROJECT_DIR$" />
+    <method v="2" />
+  </configuration>
+  <configuration default="false" name="debug" type="js.build_tools.npm" folderName="Web">
+    <package-json value="$PROJECT_DIR$/apps/web/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="dev" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs>
+      <env name="VITE_SERVER_URL" value="http://localhost:3000" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>
