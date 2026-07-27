@@ -1,10 +1,10 @@
 {
   // Pulled all of this mostly from https://opencode.ai/docs/config/ and stinky AI :(
   "$schema": "https://opencode.ai/config.json",
-  "model": "openrouter/anthropic/claude-opus-4-8",
+  "model": "openrouter/anthropic/claude-opus-4.8",
   "agent": {
     "build": {
-      "model": "openrouter/openai/claude-opus-4-8",
+      "model": "openrouter/anthropic/claude-opus-4.8"
     },
     "worker": {
       "description": "Executes well-specified, narrowly scoped implementation tasks. Use for file edits, boilerplate, test writing, mechanical refactors, and running commands. Requires an explicit spec.",
