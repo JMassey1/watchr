@@ -1,5 +1,6 @@
 import {useState} from "react";
 import {motion, useReducedMotion} from "motion/react";
+import {Bookmark, Heart, MoreHorizontal} from "lucide-react";
 
 export type DvdCaseProps = {
 	posterUrl: string;
@@ -15,7 +16,7 @@ const CASE_HEIGHT_PX = 430;
 const SPINE_WIDTH_PX = 16;
 const PERSPECTIVE_PX = 1600;
 const OPEN_ROTATION_DEG = -105;
-const SPINE_PREVIEW_ROTATION_DEG = 8;
+const SPINE_PREVIEW_ROTATION_DEG = 16;
 // Motion spring configuration values (stiffness/damping/mass), not CSS dimension units.
 const SPRING = {type: "spring" as const, stiffness: 120, damping: 22, mass: 0.9};
 
@@ -37,14 +38,32 @@ export default function DvdCase({
 			className="flex w-full justify-center"
 			style={{perspective: PERSPECTIVE_PX}}
 		>
-			<motion.div
-				className="relative transform-3d"
-				style={{width: `min(100%, ${CASE_WIDTH_PX}px)`, aspectRatio: `${CASE_WIDTH_PX} / ${CASE_HEIGHT_PX}`}}
-				initial={false}
-				whileHover={open || reduceMotion ? undefined : {rotateY: SPINE_PREVIEW_ROTATION_DEG}}
-				transition={reduceMotion ? {duration: 0} : SPRING}
-			>
-				{/* Stationary inside / back panel, positioned on the right */}
+		<motion.div
+			className="group relative transform-3d"
+			style={{width: `min(100%, ${CASE_WIDTH_PX}px)`, aspectRatio: `${CASE_WIDTH_PX} / ${CASE_HEIGHT_PX}`}}
+			initial={false}
+			whileHover={open || reduceMotion ? undefined : {rotateY: SPINE_PREVIEW_ROTATION_DEG}}
+			transition={reduceMotion ? {duration: 0} : SPRING}
+		>
+			{/* Visual-only action rail (placeholder; no handlers/data). Sibling of motion.button, never nested. */}
+			{!open && !reduceMotion ? (
+				<div
+					aria-hidden={true}
+					className="absolute -left-8 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1 rounded-md border border-black/40 bg-neutral-900/95 p-1 opacity-0 translate-x-2 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.7)] pointer-events-none transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-0"
+				>
+					<button type="button" disabled aria-hidden={true} className="rounded p-1 text-neutral-300">
+						<Bookmark aria-hidden="true" className="h-4 w-4" />
+					</button>
+					<button type="button" disabled aria-hidden={true} className="rounded p-1 text-neutral-300">
+						<Heart aria-hidden="true" className="h-4 w-4" />
+					</button>
+					<button type="button" disabled aria-hidden={true} className="rounded p-1 text-neutral-300">
+						<MoreHorizontal aria-hidden="true" className="h-4 w-4" />
+					</button>
+				</div>
+			) : null}
+
+			{/* Stationary inside / back panel, positioned on the right */}
 				<aside
 					aria-hidden={open ? undefined : true}
 					className="absolute inset-0 overflow-hidden rounded-r-md rounded-l-sm border border-black/30 bg-neutral-900 backface-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.6),0_12px_24px_-8px_rgba(0,0,0,0.7)]"
