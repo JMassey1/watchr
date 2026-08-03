@@ -10,11 +10,12 @@ export type DvdCaseProps = {
 	metadata: readonly string[];
 };
 
-const CASE_WIDTH = 300;
-const CASE_HEIGHT = 430;
-const SPINE_WIDTH = 16;
-const PERSPECTIVE = 1600;
-const OPEN_ROTATION = -105;
+const CASE_WIDTH_PX = 300;
+const CASE_HEIGHT_PX = 430;
+const SPINE_WIDTH_PX = 16;
+const PERSPECTIVE_PX = 1600;
+const OPEN_ROTATION_DEG = -105;
+// Motion spring configuration values (stiffness/damping/mass), not CSS dimension units.
 const SPRING = {type: "spring" as const, stiffness: 120, damping: 22, mass: 0.9};
 
 export default function DvdCase({
@@ -33,11 +34,11 @@ export default function DvdCase({
 	return (
 		<div
 			className="flex w-full justify-center"
-			style={{perspective: PERSPECTIVE}}
+			style={{perspective: PERSPECTIVE_PX}}
 		>
 			<div
 				className="relative transform-3d"
-				style={{width: `min(100%, ${CASE_WIDTH}px)`, aspectRatio: `${CASE_WIDTH} / ${CASE_HEIGHT}`}}
+				style={{width: `min(100%, ${CASE_WIDTH_PX}px)`, aspectRatio: `${CASE_WIDTH_PX} / ${CASE_HEIGHT_PX}`}}
 			>
 				{/* Stationary inside / back panel, positioned on the right */}
 				<aside
@@ -47,12 +48,12 @@ export default function DvdCase({
 					{/* Spine running down the left edge of the body */}
 					<div
 						className="absolute left-0 top-0 h-full bg-linear-to-r from-neutral-800 via-neutral-700 to-neutral-800"
-						style={{width: SPINE_WIDTH}}
-					/>
-					{/* Interior content sits to the right of the spine */}
-					<div
-						className="flex h-full flex-col justify-between p-4"
-						style={{paddingLeft: SPINE_WIDTH + 12}}
+					style={{width: SPINE_WIDTH_PX}}
+				/>
+				{/* Interior content sits to the right of the spine */}
+				<div
+					className="flex h-full flex-col justify-between p-4"
+					style={{paddingLeft: SPINE_WIDTH_PX + 12}}
 					>
 						<div className="space-y-1">
 							<p className="text-[10px] uppercase tracking-[0.2em] text-neutral-400">
@@ -109,7 +110,7 @@ export default function DvdCase({
 					className="absolute inset-0 origin-left rounded-r-md rounded-l-sm border border-black/40 bg-black transform-3d focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black/40"
 					style={{transformOrigin: "left center"}}
 					initial={false}
-					animate={{rotateY: open ? OPEN_ROTATION : 0}}
+					animate={{rotateY: open ? OPEN_ROTATION_DEG : 0}}
 					transition={reduceMotion ? {duration: 0} : SPRING}
 				>
 					{/* Front face: poster + plastic edging + lighting */}
@@ -129,9 +130,9 @@ export default function DvdCase({
 						{/* Spine strip on the left edge of the cover */}
 						<div
 							className="pointer-events-none absolute left-0 top-0 h-full bg-linear-to-r from-black/50 via-black/20 to-transparent"
-							style={{width: SPINE_WIDTH}}
-						/>
-						{/* Specular highlight */}
+					style={{width: SPINE_WIDTH_PX}}
+					/>
+					{/* Specular highlight */}
 						<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(105deg,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0)_35%,rgba(255,255,255,0)_70%,rgba(255,255,255,0.12)_100%)]" />
 						<div className="pointer-events-none absolute -inset-x-4 -top-10 h-20 rotate-[-8deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.35),transparent)] blur-md" />
 					</div>
@@ -139,7 +140,7 @@ export default function DvdCase({
 					{/* Back face: inside of the front cover (visible when open) */}
 					<div
 						className="absolute inset-0 flex flex-col justify-end gap-1 rounded-r-md rounded-l-sm bg-neutral-900 p-4 backface-hidden transform-[rotateY(180deg)]"
-						style={{paddingLeft: SPINE_WIDTH + 12}}
+						style={{paddingLeft: SPINE_WIDTH_PX + 12}}
 					>
 						<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(105deg,rgba(255,255,255,0.04),transparent_40%)]" />
 						<p className="text-[10px] uppercase tracking-[0.25em] text-neutral-500">
