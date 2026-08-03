@@ -15,6 +15,7 @@ const CASE_HEIGHT_PX = 430;
 const SPINE_WIDTH_PX = 16;
 const PERSPECTIVE_PX = 1600;
 const OPEN_ROTATION_DEG = -105;
+const SPINE_PREVIEW_ROTATION_DEG = 8;
 // Motion spring configuration values (stiffness/damping/mass), not CSS dimension units.
 const SPRING = {type: "spring" as const, stiffness: 120, damping: 22, mass: 0.9};
 
@@ -36,9 +37,12 @@ export default function DvdCase({
 			className="flex w-full justify-center"
 			style={{perspective: PERSPECTIVE_PX}}
 		>
-			<div
+			<motion.div
 				className="relative transform-3d"
 				style={{width: `min(100%, ${CASE_WIDTH_PX}px)`, aspectRatio: `${CASE_WIDTH_PX} / ${CASE_HEIGHT_PX}`}}
+				initial={false}
+				whileHover={open || reduceMotion ? undefined : {rotateY: SPINE_PREVIEW_ROTATION_DEG}}
+				transition={reduceMotion ? {duration: 0} : SPRING}
 			>
 				{/* Stationary inside / back panel, positioned on the right */}
 				<aside
@@ -156,7 +160,7 @@ export default function DvdCase({
 					className="absolute -bottom-3 left-1/2 h-4 w-[85%] -translate-x-1/2 rounded-[50%] bg-black/50 blur-md"
 					aria-hidden={true}
 				/>
-			</div>
+			</motion.div>
 		</div>
 	);
 }
