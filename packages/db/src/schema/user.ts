@@ -26,14 +26,13 @@ export const publicUserSchema = userSelectSchema.pick({
 	image: true
 })
 
-export const themePresetEnum = pgEnum('theme', ['default', 'bubblegum']);
-export type ThemePreset = (typeof themePresetEnum.enumValues)[number];
-export const themePresets = Object.fromEntries(
-	themePresetEnum.enumValues.map((theme) => [
-		`${theme.charAt(0).toUpperCase()}${theme.slice(1)}`,
-		theme,
-	]),
-)
+export const themePresetValues = ["default", "bubblegum"] as const;
+export type ThemePreset = (typeof themePresetValues)[number];
+export const themePresets = themePresetValues.map((value) => ({
+	label: `${value.charAt(0).toUpperCase()}${value.slice(1)}`,
+	value,
+}));
+export const themePresetEnum = pgEnum("theme", themePresetValues);
 
 export const userSettings = pgTable("user_settings", {
 	userId: text("user_id").notNull().references(() => user.id, {onDelete: "cascade"}).primaryKey(),
