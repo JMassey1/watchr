@@ -2,7 +2,7 @@ import {protectedProcedure, router} from "../index";
 import {z} from "zod";
 import {db} from "@watch3r/db";
 import {watchlistMember} from "@watch3r/db/schema/watchlist";
-import {user} from "@watch3r/db/schema/auth";
+import {user} from "@watch3r/db/schema/user";
 import {and, eq, ilike, or, notInArray} from "drizzle-orm";
 
 

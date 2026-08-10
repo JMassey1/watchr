@@ -13,7 +13,7 @@ import {
 } from "@watch3r/db/schema/watchlist";
 import {z} from "zod";
 import {TRPCError} from "@trpc/server";
-import {user} from "@watch3r/db/schema/auth";
+import {user} from "@watch3r/db/schema/user";
 import {searchTitles, getTitleDetails, posterUrl} from "@watch3r/tmdb";
 
 

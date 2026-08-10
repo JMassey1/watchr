@@ -1,6 +1,6 @@
 import {pgTable, integer, text, pgEnum, timestamp, primaryKey, boolean, unique} from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
-import {user} from "./auth";
+import {user} from "./user";
 
 export const watchlistRoleEnum = pgEnum('role', ['owner', 'admin', 'user']);
 export type WatchlistRole = (typeof watchlistRoleEnum.enumValues)[number];
