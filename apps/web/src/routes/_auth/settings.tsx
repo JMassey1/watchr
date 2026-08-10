@@ -7,6 +7,14 @@ import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 import { useAvatarUpload } from "@/hooks/use-avatar-upload";
+import {
+	Select,
+	SelectContent,
+	SelectGroup, SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue
+} from "@watch3r/ui/components/select";
 
 export const Route = createFileRoute("/_auth/settings")({
 	component: RouteComponent,
@@ -18,6 +26,12 @@ function RouteComponent() {
 	const uploadAvatar = useAvatarUpload();
 
 	const user = session?.user;
+
+	//DEBUG STUFF
+	const themes = [
+		{ label: "Default", value: "default" },
+		{ label: "Bubblegum", value: "bubblegum" },
+	]
 
 	const handleFile = (file: File | undefined) => {
 		if (!file) return;
@@ -88,6 +102,34 @@ function RouteComponent() {
 							</Button>
 						</div>
 					</div>
+				</section>
+
+				{/* Theme */}
+				<section className="mt-8 rounded-2xl border border-border bg-card p-6">
+					<h2 className="font-serif text-lg font-semibold">Theme</h2>
+					<p className="mt-1 text-sm text-muted-foreground">
+						Pick one of these beautiful themes for your watchlist.
+					</p>
+
+					<div className="mt-5 flex items-center gap-5">
+
+						<Select items={themes} defaultValue={themes[0]}>
+							<SelectTrigger className="w-full max-w-48">
+								<SelectValue/>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectGroup>
+									<SelectLabel>Themes</SelectLabel>
+									{themes.map((theme) => (
+										<SelectItem key={theme.value} value={theme.value}>
+											{theme.label}
+										</SelectItem>
+									))}
+								</SelectGroup>
+							</SelectContent>
+						</Select>
+					</div>
+
 				</section>
 			</main>
 		</div>
