@@ -1,5 +1,6 @@
 import { createDb } from "@watch3r/db";
 import * as schema from "@watch3r/db/schema/auth";
+import { user } from "@watch3r/db/schema/user";
 import { env } from "@watch3r/env/server";
 
 import { betterAuth } from "better-auth";
@@ -13,7 +14,7 @@ export function createAuth() {
     database: drizzleAdapter(db, {
       provider: "pg",
 
-      schema: schema,
+      schema: { ...schema, user },
     }),
     trustedOrigins: [env.CORS_ORIGIN, "watch3r://", "exp://", "http://localhost:8081"],
     emailAndPassword: {

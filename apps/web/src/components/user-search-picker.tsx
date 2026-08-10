@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {publicUserSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/user";
 import {useQuery} from "@tanstack/react-query";
 import {trpc} from "@/utils/trpc";
 import {z} from "zod";

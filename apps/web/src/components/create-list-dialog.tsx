@@ -1,5 +1,5 @@
 import {watchlistInsertSchema} from "@watch3r/db/schema/watchlist";
-import {publicUserSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/user";
 import {
 	Dialog,
 	DialogClose,

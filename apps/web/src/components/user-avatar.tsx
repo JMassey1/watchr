@@ -1,4 +1,4 @@
-import {publicUserSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/user";
 import {z} from "zod";
 import {Avatar, AvatarBadge, AvatarFallback, AvatarImage} from "@watch3r/ui/components/avatar";
 import React from "react";
