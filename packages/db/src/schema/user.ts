@@ -1,4 +1,4 @@
-import {boolean, pgTable, text, timestamp} from "drizzle-orm/pg-core";
+import {boolean, pgEnum, pgTable, text, timestamp} from "drizzle-orm/pg-core";
 import {createSelectSchema} from "drizzle-orm/zod";
 
 export const user = pgTable("user", {
@@ -24,4 +24,18 @@ export const publicUserSchema = userSelectSchema.pick({
 	image: true
 }).partial({
 	image: true
+})
+
+export const themePresetEnum = pgEnum('theme', ['default', 'bubblegum']);
+export type ThemePreset = (typeof themePresetEnum.enumValues)[number];
+export const themePresets = Object.fromEntries(
+	themePresetEnum.enumValues.map((theme) => [
+		`${theme.charAt(0).toUpperCase()}${theme.slice(1)}`,
+		theme,
+	]),
+)
+
+export const userSettings = pgTable("user_settings", {
+	userId: text("user_id").notNull().references(() => user.id, {onDelete: "cascade"}).primaryKey(),
+	themePreset: themePresetEnum("theme_preset").notNull().default("default")
 })
