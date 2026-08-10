@@ -15,6 +15,9 @@ import {
 	SelectTrigger,
 	SelectValue
 } from "@watch3r/ui/components/select";
+import {useMutation, useSuspenseQuery} from "@tanstack/react-query";
+import {queryClient, trpc} from "@/utils/trpc";
+import {themePresets} from "@watch3r/db/schema/user";
 
 export const Route = createFileRoute("/_auth/settings")({
 	component: RouteComponent,
@@ -26,12 +29,24 @@ function RouteComponent() {
 	const uploadAvatar = useAvatarUpload();
 
 	const user = session?.user;
+	const { data: userSettings } = useSuspenseQuery(
+		trpc.user.settings.queryOptions()
+	);
 
-	//DEBUG STUFF
-	const themes = [
-		{ label: "Default", value: "default" },
-		{ label: "Bubblegum", value: "bubblegum" },
-	]
+	const updateUserSettings = useMutation(
+		trpc.user.updateSettings.mutationOptions({
+			onSuccess: async () => {
+				await queryClient.invalidateQueries({
+					queryKey: trpc.user.settings.queryKey(),
+				});
+				toast.success("Settings updated!");
+			},
+			onError: (err) => {
+				toast.error("Error updating settings");
+				console.error("Error updating settings", err);
+			}
+		})
+	)
 
 	const handleFile = (file: File | undefined) => {
 		if (!file) return;
@@ -112,15 +127,23 @@ function RouteComponent() {
 					</p>
 
 					<div className="mt-5 flex items-center gap-5">
-
-						<Select items={themes} defaultValue={themes[0]}>
+						<Select
+							items={themePresets}
+							value={userSettings.themePreset}
+							disabled={updateUserSettings.isPending}
+							onValueChange={(themePreset) => {
+								if (themePreset) {
+									updateUserSettings.mutate({ themePreset });
+								}
+							}}
+						>
 							<SelectTrigger className="w-full max-w-48">
 								<SelectValue/>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectGroup>
 									<SelectLabel>Themes</SelectLabel>
-									{themes.map((theme) => (
+									{themePresets.map((theme) => (
 										<SelectItem key={theme.value} value={theme.value}>
 											{theme.label}
 										</SelectItem>

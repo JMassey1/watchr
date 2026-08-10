@@ -23,6 +23,7 @@
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
     "@watch3r/api": "workspace:*",
+    "@watch3r/db": "workspace:*",
     "@watch3r/env": "workspace:*",
     "@watch3r/ui": "workspace:*",
     "better-auth": "catalog:",
