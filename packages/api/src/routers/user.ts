@@ -2,9 +2,8 @@ import {protectedProcedure, router} from "../index";
 import {z} from "zod";
 import {db} from "@watch3r/db";
 import {watchlistMember} from "@watch3r/db/schema/watchlist";
-import {user} from "@watch3r/db/schema/user";
-import {and, eq, ilike, or, notInArray} from "drizzle-orm";
-
+import {user, userSettings} from "@watch3r/db/schema/user";
+import {and, eq, ilike, notInArray, or} from "drizzle-orm";
 
 
 export const userRouter = router({
@@ -43,5 +42,14 @@ export const userRouter = router({
 				)
 				.limit(input.limit);
 
+		}),
+
+	settings: protectedProcedure
+		.query(async ({ctx}) => {
+			const user = ctx.session.user;
+			return db
+				.select()
+				.from(userSettings)
+				.where(eq(userSettings.userId, user.id));
 		})
 })
