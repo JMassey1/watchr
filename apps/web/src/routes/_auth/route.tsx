@@ -13,6 +13,10 @@ export const Route = createFileRoute("/_auth")({
     }
     return { session };
   },
+  loader: ({context}) =>
+      context.queryClient.ensureQueryData(
+          context.trpc.user.settings.queryOptions(),
+      ),
 });
 
 function AuthLayout() {

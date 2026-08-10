@@ -14,6 +14,7 @@ import { Skeleton } from "@watch3r/ui/components/skeleton";
 import { authClient } from "@/lib/auth-client";
 import {UserAvatar} from "@/components/user-avatar";
 import {Settings, User} from "lucide-react";
+import {queryClient} from "@/utils/trpc";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ export default function UserMenu() {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
+                    queryClient.clear();
                     navigate({
                       to: "/",
                     });
