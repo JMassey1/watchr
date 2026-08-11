@@ -1,6 +1,6 @@
 import {createFileRoute, Link, redirect} from '@tanstack/react-router'
 import {useMemo, useState} from "react";
-import {useQuery} from "@tanstack/react-query";
+import {useQuery, useSuspenseQuery} from "@tanstack/react-query";
 import {Button, buttonVariants} from "@watch3r/ui/components/button";
 import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
 import {queryClient, trpc} from "@/utils/trpc";
@@ -42,8 +42,11 @@ const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 
 function RouteComponent() {
 	const {watchlist} = Route.useLoaderData();
-	const {session, userSettings} = Route.useRouteContext();
+	const {session} = Route.useRouteContext();
 	const user = session.data?.user;
+	const { data: userSettings } = useSuspenseQuery(
+		trpc.user.settings.queryOptions()
+	)
 
 	const [filter, setFilter] = useState<ItemFilter>("all");
 	const [itemQuery, setItemQuery] = useState<string>("");
