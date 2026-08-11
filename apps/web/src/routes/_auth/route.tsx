@@ -1,6 +1,9 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { authClient } from "@/lib/auth-client";
+import {useSuspenseQuery} from "@tanstack/react-query";
+import {trpc} from "@/utils/trpc";
+import {ThemePresetProvider} from "@/components/theme-provider";
 
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
@@ -20,5 +23,14 @@ export const Route = createFileRoute("/_auth")({
 });
 
 function AuthLayout() {
-  return <Outlet />;
+  const { data: userSettings } = useSuspenseQuery(
+      trpc.user.settings.queryOptions(),
+  );
+
+  return (
+      <>
+        <ThemePresetProvider preset={userSettings.themePreset} />
+        <Outlet />
+      </>
+  );
 }
