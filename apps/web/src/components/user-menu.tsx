@@ -50,11 +50,11 @@ export default function UserMenu() {
             onClick={() => {
               authClient.signOut({
                 fetchOptions: {
-                  onSuccess: () => {
-                    queryClient.clear();
-                    navigate({
+                  onSuccess: async () => {
+                    await navigate({
                       to: "/",
                     });
+                    queryClient.clear();
                   },
                 },
               });
