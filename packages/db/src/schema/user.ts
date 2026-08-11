@@ -26,7 +26,7 @@ export const publicUserSchema = userSelectSchema.pick({
 	image: true
 })
 
-export const themePresetValues = ["default", "bubblegum"] as const;
+export const themePresetValues = ["default", "bubblegum", "keroppi"] as const;
 export type ThemePreset = (typeof themePresetValues)[number];
 export const themePresets = themePresetValues.map((value) => ({
 	label: `${value.charAt(0).toUpperCase()}${value.slice(1)}`,
