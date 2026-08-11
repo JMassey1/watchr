@@ -126,7 +126,7 @@ export async function getTitleDetails(
 export function posterUrl(
 	posterPath: string | null,
 	size: "w200" | "w500" | "original" = "w500",
-): string | null {
-	if (!posterPath) return null;
+): string {
+	if (!posterPath) return "placeholder.svg";
 	return `${env.TMDB_IMAGE_BASE_URL}/${size}${posterPath}`;
 }

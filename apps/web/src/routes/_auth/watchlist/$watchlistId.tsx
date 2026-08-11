@@ -8,6 +8,7 @@ import {MemberStack} from "@/components/member-stack";
 import {AddTitleDialog} from "@/components/add-title-dialog";
 import {formatDateOnly} from "@/utils/dates";
 import {DisplayCard} from "@/components/display-card";
+import DvdCase from "@/components/dvd-case";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	loader: async ({params}) => {
@@ -41,7 +42,9 @@ const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 
 function RouteComponent() {
 	const {watchlist} = Route.useLoaderData();
-	const {session} = Route.useRouteContext();
+	const {session, userSettings} = Route.useRouteContext();
+	const user = session.data?.user;
+
 	const [filter, setFilter] = useState<ItemFilter>("all");
 	const [itemQuery, setItemQuery] = useState<string>("");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
@@ -52,8 +55,8 @@ function RouteComponent() {
 	const itemsQuery = useQuery(
 		trpc.watchlist.getItems.queryOptions({watchlistId: watchlist.id})
 	);
-	const isOwner = session.data?.user.id === watchlist.ownerId;
-	const isAdmin = session.data?.user.id === watchlistMembers.data?.some((m) => m.id === session.data?.user.id && m.role === "admin");
+	const isOwner = user?.id === watchlist.ownerId;
+	const isAdmin = user?.id === watchlistMembers.data?.some((m) => m.id === user?.id && m.role === "admin");
 
 	const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 	const watchedCount = items.filter((item) => item.watched).length;
@@ -87,6 +90,10 @@ function RouteComponent() {
 					<ArrowLeft className="size-4"/>
 					Back to watchlists
 				</Link>
+
+				<Button onClick={() => console.dir(userSettings)}>
+					TEST
+				</Button>
 
 				{/* Header */}
 				<div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -205,20 +212,31 @@ function RouteComponent() {
 				{filteredItems.length > 0 ? (
 					<section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
 						{filteredItems.map((item) => (
-							<DisplayCard
-								key={`wl-item-card-${item.id}`}
-								coverImage={item.posterUrl}
-								badge={item.mediaType === "movie" ? "Movie" : "TV"}
-								cornerLabel={item.watched ? "Watched" : null}
-								footer={(
-									<div className="space-y-1.5">
-										<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
-										<p className="text-sm text-muted-foreground">
-											{item.year} &middot; {item.runtime}
-										</p>
-									</div>
-								)}
-							/>
+							(userSettings.themePreset === "keroppi"
+								? <DvdCase
+										key={`wl-item-case-${item.id}`}
+										posterUrl={item.posterUrl}
+										posterAlt={`${item.name} Cover`}
+										title={item.name}
+										subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
+										description="PLACEHOLDER DESCRIPTION"
+										metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
+									/>
+								: <DisplayCard
+									key={`wl-item-card-${item.id}`}
+									coverImage={item.posterUrl}
+									badge={item.mediaType === "movie" ? "Movie" : "TV"}
+									cornerLabel={item.watched ? "Watched" : null}
+									footer={(
+										<div className="space-y-1.5">
+											<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
+											<p className="text-sm text-muted-foreground">
+												{item.year} &middot; {item.runtime}
+											</p>
+										</div>
+									)}
+								/>
+							)
 						))}
 					</section>
 

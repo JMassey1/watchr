@@ -104,7 +104,7 @@ export default function DvdCase({
 
 						<div className="space-y-2">
 							{description ? (
-								<p className="text-[11px] leading-relaxed text-neutral-300">
+								<p className="text-[12px] leading-relaxed text-neutral-300">
 									{description}
 								</p>
 							) : null}
@@ -113,7 +113,7 @@ export default function DvdCase({
 									{metadata.map((item) => (
 										<li
 											key={item}
-											className="rounded-full border border-neutral-600/50 bg-neutral-800/60 px-2 py-0.5 text-[10px] text-neutral-300"
+											className="rounded-full border border-neutral-600/50 bg-neutral-800/60 px-2 py-0.5 text-[11px] text-neutral-300"
 										>
 											{item}
 										</li>
