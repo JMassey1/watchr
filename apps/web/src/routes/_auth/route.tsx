@@ -2,28 +2,27 @@ import { Outlet, createFileRoute, redirect, useNavigate } from "@tanstack/react-
 import { useEffect } from "react";
 
 import { authClient } from "@/lib/auth-client";
-import {useSuspenseQuery} from "@tanstack/react-query";
-import {trpc} from "@/utils/trpc";
 import {ThemePresetProvider} from "@/components/theme-provider";
 
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
-  beforeLoad: async () => {
+  beforeLoad: async ({ context }) => {
     const session = await authClient.getSession();
     if (!session.data) {
       throw redirect({
         to: "/login",
       });
     }
-    return { session };
+    const userSettings = await context.queryClient.ensureQueryData(
+        context.trpc.user.settings.queryOptions(),
+    )
+
+    return { session, userSettings };
   },
-  loader: ({context}) =>
-      context.queryClient.ensureQueryData(
-          context.trpc.user.settings.queryOptions(),
-      ),
 });
 
 function AuthLayout() {
+  const { userSettings } = Route.useRouteContext();
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
 
@@ -32,18 +31,9 @@ function AuthLayout() {
       void navigate({ to: "/login" });
     }
   }, [isPending, navigate, session]);
-
   if (isPending || !session) {
     return null;
   }
-
-  return <AuthenticatedLayout />;
-}
-
-function AuthenticatedLayout() {
-  const { data: userSettings } = useSuspenseQuery(
-      trpc.user.settings.queryOptions(),
-  );
 
   return (
       <>

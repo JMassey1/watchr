@@ -56,7 +56,9 @@ export const userRouter = router({
 				.onConflictDoNothing();
 
 			const [settings] = await db
-				.select()
+				.select({
+					themePreset: userSettings.themePreset
+				})
 				.from(userSettings)
 				.where(eq(userSettings.userId, userId))
 				.limit(1);
