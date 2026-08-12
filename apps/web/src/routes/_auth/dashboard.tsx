@@ -106,11 +106,8 @@ function RouteComponent() {
 								key={f.key}
 								onClick={() => setFilter(f.key)}
 								aria-pressed={filter === f.key}
-								className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-									filter === f.key
-										? "bg-primary text-primary-foreground"
-										: "text-muted-foreground hover:text-foreground"
-								}`}
+								variant={filter === f.key ? "default" : "secondary"}
+								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
 							>
 								{f.label}
 							</Button>

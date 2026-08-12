@@ -34,7 +34,7 @@ export default function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-muted-foreground transition-colors hover:text-foreground" />}>
+      <DropdownMenuTrigger render={<Button variant="ghost" className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-foreground transition-colors hover:text-foreground" />}>
         <UserAvatar user={session.user} badgeIcon={<User className="size-4" />} />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-card">

@@ -70,6 +70,7 @@ function RouteComponent() {
 				<div className="max-w-2xl">
 					<Button
 						type="button"
+						variant="ghost"
 						onClick={() => router.history.back()}
 						className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 					>
