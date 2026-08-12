@@ -68,8 +68,13 @@ function RouteComponent() {
 			value: myWatchlists.data?.filter((wl) => wl.ownerId !== session.data?.user.id).length,
 			icon: Users
 		},
-		{label: "Titles queued", value: 67, icon: Clapperboard},
+		{
+			label: "Titles queued",
+			value: 67,
+			icon: Clapperboard
+		},
 	]
+	//TODO: ^^ Implement route to get number of items in all lists for a user.
 
 	return (
 		<div className="mih-h-screen">
