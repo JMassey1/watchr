@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {createFileRoute, Link, useRouter} from "@tanstack/react-router";
 import { useRef } from "react";
 import { Button } from "@watch3r/ui/components/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@watch3r/ui/components/avatar";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_auth/settings")({
 });
 
 function RouteComponent() {
+	const router = useRouter();
 	const { data: session, refetch } = authClient.useSession();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const uploadAvatar = useAvatarUpload();
@@ -67,13 +68,14 @@ function RouteComponent() {
 		<div className="mih-h-screen">
 			<main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
 				<div className="max-w-2xl">
-					<Link
-						to="/dashboard"
+					<Button
+						type="button"
+						onClick={() => router.history.back()}
 						className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
 					>
 						<ArrowLeft className="size-4" />
 						Back to watchlists
-					</Link>
+					</Button>
 
 					<div className="mt-6 space-y-1.5">
 						<h1 className="font-serif text-3xl font-semibold tracking-light text-balance sm:text-4xl">
@@ -165,6 +167,7 @@ function RouteComponent() {
 	);
 }
 
+//TODO: Change preview cover based on theme selected (keroppi shows keroppi, bubblegum shows a piece of gum, default shows something normal, etc.)
 function ThemePreview() {
 	const prefersReducedMotion = useReducedMotion();
 
