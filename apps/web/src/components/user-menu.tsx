@@ -6,7 +6,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
+  DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@watch3r/ui/components/dropdown-menu";
 import { Skeleton } from "@watch3r/ui/components/skeleton";
@@ -14,11 +14,14 @@ import { Skeleton } from "@watch3r/ui/components/skeleton";
 import { authClient } from "@/lib/auth-client";
 import {UserAvatar} from "@/components/user-avatar";
 import {Settings, User} from "lucide-react";
-import {queryClient} from "@/utils/trpc";
+import {queryClient, trpc} from "@/utils/trpc";
+import {useQuery} from "@tanstack/react-query";
 
 export default function UserMenu() {
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
+  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+
 
   if (isPending) {
     return <Skeleton className="h-9 w-24" />;
@@ -40,6 +43,24 @@ export default function UserMenu() {
       <DropdownMenuContent className="bg-card">
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          {session.user.role === "admin" && (
+              <DropdownMenuItem
+                  closeOnClick={false}
+                  onClick={() => void healthCheck.refetch()}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}/>
+                  <span className="text-muted-foreground">
+                  {healthCheck.isFetching
+                      ? "Checking..."
+                      : healthCheck.data
+                          ? "Connected"
+                          : "Disconnected"
+                  }
+                </span>
+                </div>
+              </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
           <DropdownMenuItem render={<Link to="/settings" />}>
