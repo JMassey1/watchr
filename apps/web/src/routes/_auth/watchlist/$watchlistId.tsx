@@ -2,6 +2,16 @@ import {createFileRoute, Link, redirect} from '@tanstack/react-router'
 import {useMemo, useRef, useState} from "react";
 import {useMutation, useQuery, useSuspenseQuery} from "@tanstack/react-query";
 import {Button, buttonVariants} from "@watch3r/ui/components/button";
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogCancel,
+	AlertDialogAction,
+} from "@watch3r/ui/components/alert-dialog";
 import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
 import {queryClient, trpc} from "@/utils/trpc";
 import {MemberStack} from "@/components/member-stack";
@@ -52,6 +62,7 @@ function RouteComponent() {
 	const [filter, setFilter] = useState<ItemFilter>("all");
 	const [itemQuery, setItemQuery] = useState<string>("");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
+	const [titleToRemove, setTitleToRemove] = useState<{id: number; name: string} | null>(null);
 
 	const watchlistMembers = useQuery(
 		trpc.watchlist.getWatchlistMembers.queryOptions({watchlistId: watchlist.id})
@@ -100,6 +111,7 @@ function RouteComponent() {
 					queryKey: trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
 				});
 				toast.success("Title removed from watchlist");
+				setTitleToRemove(null);
 			},
 			onError: (err) => {
 				toast.error("Couldn't remove title from watchlist");
@@ -276,9 +288,7 @@ function RouteComponent() {
 											},
 											onRemove: isOwner ? () => {
 												if (actionsPending || actionInFlight.current) return;
-												if (!window.confirm(`Remove "${item.name}" from "${watchlist.name}"? This only removes it from this watchlist, not from other watchlists or the title catalog.`)) return;
-												actionInFlight.current = true;
-												removeItem.mutate({watchlistId: watchlist.id, titleId: item.id});
+												setTitleToRemove({id: item.id, name: item.name});
 											} : undefined,
 										}}
 									/>
@@ -325,6 +335,38 @@ function RouteComponent() {
 				open={addTitleOpen}
 				onOpenChange={setAddTitleOpen}
 			/>
+			<AlertDialog
+				open={titleToRemove !== null}
+				onOpenChange={(open) => {
+					if (!open && !actionsPending && !actionInFlight.current) setTitleToRemove(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							Remove "{titleToRemove?.name}" from "{watchlist.name}"?
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							This only removes it from this watchlist, not from other watchlists or the title catalog.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={actionsPending}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							type="button"
+							variant="destructive"
+							disabled={actionsPending || !titleToRemove}
+							onClick={() => {
+								if (!titleToRemove || actionsPending || actionInFlight.current) return;
+								actionInFlight.current = true;
+								removeItem.mutate({watchlistId: watchlist.id, titleId: titleToRemove.id});
+							}}
+						>
+							{actionsPending ? "Removing..." : "Remove"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	)
 }
