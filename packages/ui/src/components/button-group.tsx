@@ -11,9 +11,9 @@ const buttonGroupVariants = cva(
     variants: {
       orientation: {
         horizontal:
-            "[&>[data-slot]:not(:last-child)]:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:border-l-0",
+            "[&>[data-slot]:not(:last-child)]:rounded-r-none [&>[data-slot]~[data-slot]]:rounded-l-none [&>[data-slot]~[data-slot]]:border-l-0 [&>[data-slot=button][data-size=icon-xs]]:min-w-8 [&>[data-slot=button][data-size=icon-sm]]:min-w-9 [&>[data-slot=button][data-size=icon]]:min-w-10 [&>[data-slot=button][data-size=icon-lg]]:min-w-11",
         vertical:
-            "flex-col [&>[data-slot]:not(:last-child)]:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0",
+            "flex-col [&>[data-slot]:not(:last-child)]:rounded-b-none [&>[data-slot]~[data-slot]]:rounded-t-none [&>[data-slot]~[data-slot]]:border-t-0 [&>[data-slot=button][data-size=icon-xs]]:min-h-8 [&>[data-slot=button][data-size=icon-sm]]:min-h-9 [&>[data-slot=button][data-size=icon]]:min-h-10 [&>[data-slot=button][data-size=icon-lg]]:min-h-11",
       },
     },
     defaultVariants: {
