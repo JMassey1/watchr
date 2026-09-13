@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {motion, useReducedMotion} from "motion/react";
-import {Bookmark, Heart, MoreHorizontal} from "lucide-react";
+import {Eye, EyeOff, Trash2} from "lucide-react";
 
 export type DvdCaseProps = {
 	posterUrl: string;
@@ -9,6 +9,12 @@ export type DvdCaseProps = {
 	subtitle: string;
 	description: string;
 	metadata: readonly string[];
+	watchlistActions?: {
+		watched: boolean;
+		onToggleWatched: () => void;
+		onRemove?: () => void;
+		disabled?: boolean;
+	};
 };
 
 const CASE_WIDTH_PX = 300;
@@ -27,6 +33,7 @@ export default function DvdCase({
 	subtitle,
 	description,
 	metadata,
+	watchlistActions,
 }: DvdCaseProps) {
 	const [open, setOpen] = useState(false);
 	const reduceMotion = useReducedMotion();
@@ -45,21 +52,34 @@ export default function DvdCase({
 			whileHover={open || reduceMotion ? undefined : {rotateY: SPINE_PREVIEW_ROTATION_DEG}}
 			transition={reduceMotion ? {duration: 0} : SPRING}
 		>
-			{/* Visual-only action rail (placeholder; no handlers/data). Sibling of motion.button, never nested. */}
-			{!open && !reduceMotion ? (
+			{/* Keep actions separate from the case-opening button and inset for narrow screens. */}
+			{watchlistActions && !open ? (
 				<div
-					aria-hidden={true}
-					className="absolute -left-8 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1 rounded-md border border-black/40 bg-neutral-900/95 p-1 opacity-0 translate-x-2 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.7)] pointer-events-none transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-0"
+					className="absolute left-2 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1 rounded-md border border-black/40 bg-neutral-900/95 p-1 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.7)]"
 				>
-					<button type="button" disabled aria-hidden={true} className="rounded p-1 text-neutral-300">
-						<Bookmark aria-hidden="true" className="h-4 w-4" />
+					<button
+						type="button"
+						onClick={watchlistActions.onToggleWatched}
+						disabled={watchlistActions.disabled}
+						aria-label={`Watched: ${title}`}
+						aria-pressed={watchlistActions.watched}
+						title={`Mark ${title} as ${watchlistActions.watched ? "unwatched" : "watched"}`}
+						className="flex size-11 items-center justify-center rounded text-neutral-300 transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-emerald-950 aria-pressed:text-emerald-300 motion-reduce:transition-none"
+					>
+						{watchlistActions.watched ? <Eye aria-hidden="true" className="size-5" /> : <EyeOff aria-hidden="true" className="size-5" />}
 					</button>
-					<button type="button" disabled aria-hidden={true} className="rounded p-1 text-neutral-300">
-						<Heart aria-hidden="true" className="h-4 w-4" />
-					</button>
-					<button type="button" disabled aria-hidden={true} className="rounded p-1 text-neutral-300">
-						<MoreHorizontal aria-hidden="true" className="h-4 w-4" />
-					</button>
+					{watchlistActions.onRemove ? (
+						<button
+							type="button"
+							onClick={watchlistActions.onRemove}
+							disabled={watchlistActions.disabled}
+							aria-label={`Remove ${title} from this watchlist`}
+							title={`Remove ${title} from this watchlist`}
+							className="flex size-11 items-center justify-center rounded text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+						>
+							<Trash2 aria-hidden="true" className="size-5" />
+						</button>
+					) : null}
 				</div>
 			) : null}
 

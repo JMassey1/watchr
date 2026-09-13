@@ -9,7 +9,7 @@ import {
 	watchlistRoles, watchlistSelectSchema,
 	title,
 	watchlistItem,
-	mediaTypeEnum,
+	mediaTypeEnum, type WatchlistRole,
 } from "@watch3r/db/schema/watchlist";
 import {z} from "zod";
 import {TRPCError} from "@trpc/server";
@@ -22,10 +22,9 @@ TODO:
 - Delete list (needs to check role of user, admin+ to do it)
 - Add member (^^)
 - Remove member (^^)
-- Item follow-ups: setWatched, removeItem
 */
 
-async function requireMembership(watchlistId: number, userId: string) {
+async function requireMembership(watchlistId: number, userId: string, acceptedRoles?: WatchlistRole[], errorMsg?: string) {
 	const [membership] = await db
 		.select({ role: watchlistMember.role })
 		.from(watchlistMember)
@@ -41,6 +40,12 @@ async function requireMembership(watchlistId: number, userId: string) {
 		throw new TRPCError({
 			code: "FORBIDDEN",
 			message: "You are not a member of this watchlist"
+		});
+	}
+	if (acceptedRoles && !acceptedRoles.includes(membership.role)) {
+		throw new TRPCError({
+			code: "FORBIDDEN",
+			message: errorMsg ?? "You do not have permission to perform this action"
 		});
 	}
 	return membership;
@@ -258,6 +263,76 @@ export const watchlistRouter = router({
 
 				return { titleId: titleRow.id };
 			});
+		}),
+	setWatched: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+			titleId: z.number().int().positive(),
+			watched: z.boolean(),
+		}))
+		.mutation(async ({ ctx, input }) => {
+			await requireMembership(input.watchlistId, ctx.session.user.id);
+
+			const [updated] = await db
+				.update(watchlistItem)
+				.set({ watched: input.watched })
+				.where(
+					and(
+						eq(watchlistItem.watchlistId, input.watchlistId),
+						eq(watchlistItem.titleId, input.titleId)
+					)
+				)
+				.returning();
+
+			if (!updated) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Watchlist item not found"
+				});
+			}
+
+			return updated;
+		}),
+	removeItem: protectedProcedure
+		.input(z.object({
+			watchlistId: watchlistSelectSchema.shape.id,
+			titleId: z.number().int().positive(),
+		}))
+		.mutation(async ({ ctx, input }) => {
+			const userId = ctx.session.user.id;
+			await requireMembership(input.watchlistId, userId);
+
+			const [watchlistOwner] = await db
+				.select({ ownerId: watchlist.ownerId })
+				.from(watchlist)
+				.where(eq(watchlist.id, input.watchlistId))
+				.limit(1);
+
+			if (!watchlistOwner || watchlistOwner.ownerId !== userId) {
+				throw new TRPCError({
+					code: "FORBIDDEN",
+					message: "Only the watchlist owner can remove items"
+				});
+			}
+
+			const [removed] = await db
+				.delete(watchlistItem)
+				.where(
+					and(
+						eq(watchlistItem.watchlistId, input.watchlistId),
+						eq(watchlistItem.titleId, input.titleId)
+					)
+				)
+				.returning();
+
+			if (!removed) {
+				throw new TRPCError({
+					code: "NOT_FOUND",
+					message: "Watchlist item not found"
+				});
+			}
+
+			return removed;
 		}),
 	// List the titles on a watchlist, shaped to what the UI renders.
 	getItems: protectedProcedure

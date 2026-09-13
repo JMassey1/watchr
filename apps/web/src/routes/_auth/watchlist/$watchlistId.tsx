@@ -1,6 +1,6 @@
 import {createFileRoute, Link, redirect} from '@tanstack/react-router'
-import {useMemo, useState} from "react";
-import {useQuery, useSuspenseQuery} from "@tanstack/react-query";
+import {useMemo, useRef, useState} from "react";
+import {useMutation, useQuery, useSuspenseQuery} from "@tanstack/react-query";
 import {Button, buttonVariants} from "@watch3r/ui/components/button";
 import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
 import {queryClient, trpc} from "@/utils/trpc";
@@ -9,6 +9,7 @@ import {AddTitleDialog} from "@/components/add-title-dialog";
 import {formatDateOnly} from "@/utils/dates";
 import {DisplayCard} from "@/components/display-card";
 import DvdCase from "@/components/dvd-case";
+import {toast} from "sonner";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	loader: async ({params}) => {
@@ -59,7 +60,55 @@ function RouteComponent() {
 		trpc.watchlist.getItems.queryOptions({watchlistId: watchlist.id})
 	);
 	const isOwner = user?.id === watchlist.ownerId;
-	const isAdmin = user?.id === watchlistMembers.data?.some((m) => m.id === user?.id && m.role === "admin");
+	const isAdmin = watchlistMembers.data?.some((m) => m.id === user?.id && m.role === "admin");
+
+	// Also guard submissions before React renders the mutations' pending state.
+	const actionInFlight = useRef(false);
+	const setWatched = useMutation(
+		trpc.watchlist.setWatched.mutationOptions({
+			networkMode: "always",
+			retry: false,
+			onSuccess: async (updated, variables) => {
+				queryClient.setQueryData(
+					trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+					(previous) => previous?.map((item) =>
+						item.id === variables.titleId ? {...item, watched: updated.watched} : item,
+					),
+				);
+				await queryClient.invalidateQueries({
+					queryKey: trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+				});
+				toast.success(variables.watched ? "Title marked as watched" : "Title marked as unwatched");
+			},
+			onError: (err) => {
+				toast.error("Couldn't update watched status");
+				console.error("Error updating watched status", err);
+			},
+			onSettled: () => { actionInFlight.current = false; },
+		}),
+	);
+	const removeItem = useMutation(
+		trpc.watchlist.removeItem.mutationOptions({
+			networkMode: "always",
+			retry: false,
+			onSuccess: async (_item, variables) => {
+				queryClient.setQueryData(
+					trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+					(previous) => previous?.filter((item) => item.id !== variables.titleId),
+				);
+				await queryClient.invalidateQueries({
+					queryKey: trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+				});
+				toast.success("Title removed from watchlist");
+			},
+			onError: (err) => {
+				toast.error("Couldn't remove title from watchlist");
+				console.error("Error removing title from watchlist", err);
+			},
+			onSettled: () => { actionInFlight.current = false; },
+		}),
+	);
+	const actionsPending = setWatched.isPending || removeItem.isPending;
 
 	const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 	const watchedCount = items.filter((item) => item.watched).length;
@@ -217,6 +266,21 @@ function RouteComponent() {
 										subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
 										description="PLACEHOLDER DESCRIPTION"
 										metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
+										watchlistActions={{
+											watched: item.watched,
+											disabled: actionsPending,
+											onToggleWatched: () => {
+												if (actionsPending || actionInFlight.current) return;
+												actionInFlight.current = true;
+												setWatched.mutate({watchlistId: watchlist.id, titleId: item.id, watched: !item.watched});
+											},
+											onRemove: isOwner ? () => {
+												if (actionsPending || actionInFlight.current) return;
+												if (!window.confirm(`Remove "${item.name}" from "${watchlist.name}"? This only removes it from this watchlist, not from other watchlists or the title catalog.`)) return;
+												actionInFlight.current = true;
+												removeItem.mutate({watchlistId: watchlist.id, titleId: item.id});
+											} : undefined,
+										}}
 									/>
 								: <DisplayCard
 									key={`wl-item-card-${item.id}`}
