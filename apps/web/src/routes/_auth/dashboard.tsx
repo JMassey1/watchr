@@ -8,6 +8,7 @@ import {CreateListDialog} from "@/components/create-list-dialog";
 import {toast} from "sonner";
 import {WatchlistCard} from "@/components/watchlist-card";
 import {Clapperboard, Crown, Film, Plus, Search, Settings, Users, Wrench} from "lucide-react";
+import {ButtonGroup} from "@watch3r/ui/components/button-group";
 
 export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
@@ -105,7 +106,7 @@ function RouteComponent() {
 
 				{/* Watchlist Filters */}
 				<div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="inline-flex rounded-xl border border-border bg-card p-1">
+					<ButtonGroup className="inline-flex rounded-xl border border-border bg-card p-1">
 						{FILTERS.map((f) => (
 							<Button
 								key={f.key}
@@ -117,7 +118,7 @@ function RouteComponent() {
 								{f.label}
 							</Button>
 						))}
-					</div>
+					</ButtonGroup>
 
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
 						{session.data?.user.role === "admin" && (

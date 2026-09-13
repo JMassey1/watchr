@@ -239,7 +239,7 @@ function RouteComponent() {
 
 				{/* Item Filters */}
 				<div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-					<div className="inline-flex rounded-xl border border-border bg-card p-1">
+					<ButtonGroup className="inline-flex rounded-xl border border-border bg-card p-1">
 						{ITEM_FILTERS.map((f) => (
 							<Button
 								key={f.key}
@@ -251,7 +251,7 @@ function RouteComponent() {
 								{f.label}
 							</Button>
 						))}
-					</div>
+					</ButtonGroup>
 
 					<div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
 						<div className="relative sm:w-64">
