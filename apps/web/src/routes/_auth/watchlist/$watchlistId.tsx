@@ -12,14 +12,16 @@ import {
 	AlertDialogCancel,
 	AlertDialogAction,
 } from "@watch3r/ui/components/alert-dialog";
-import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
+import {ArrowLeft, Check, Clapperboard, Crown, Film, LayoutGrid, List, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
 import {queryClient, trpc} from "@/utils/trpc";
 import {MemberStack} from "@/components/member-stack";
 import {AddTitleDialog} from "@/components/add-title-dialog";
 import {formatDateOnly} from "@/utils/dates";
 import {DisplayCard} from "@/components/display-card";
+import {DisplayRow} from "@/components/display-row";
 import DvdCase from "@/components/dvd-case";
 import {toast} from "sonner";
+import {ButtonGroup} from "@watch3r/ui/components/button-group";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	loader: async ({params}) => {
@@ -61,6 +63,7 @@ function RouteComponent() {
 
 	const [filter, setFilter] = useState<ItemFilter>("all");
 	const [itemQuery, setItemQuery] = useState<string>("");
+	const [view, setView] = useState<"cards" | "list">("cards");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
 	const [titleToRemove, setTitleToRemove] = useState<{id: number; name: string} | null>(null);
 
@@ -235,7 +238,7 @@ function RouteComponent() {
 				</div>
 
 				{/* Item Filters */}
-				<div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
 					<div className="inline-flex rounded-xl border border-border bg-card p-1">
 						{ITEM_FILTERS.map((f) => (
 							<Button
@@ -250,7 +253,7 @@ function RouteComponent() {
 						))}
 					</div>
 
-					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+					<div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
 						<div className="relative sm:w-64">
 							<Search
 								className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/>
@@ -262,14 +265,62 @@ function RouteComponent() {
 								className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-sm outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/40"
 							/>
 						</div>
+						<ButtonGroup aria-label="Title view" className="inline-flex self-start rounded-xl border border-border bg-card p-1">
+							<Button
+								type="button"
+								variant={view === "cards" ? "default" : "secondary"}
+								onClick={() => setView("cards")}
+								aria-pressed={view === "cards"}
+								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+							>
+								<LayoutGrid className="size-4" aria-hidden="true"/>
+								{userSettings.themePreset === "keroppi" ? "DVDs" : "Cards"}
+							</Button>
+							<Button
+								type="button"
+								variant={view === "list" ? "default" : "secondary"}
+								onClick={() => setView("list")}
+								aria-pressed={view === "list"}
+								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+							>
+								<List className="size-4" aria-hidden="true"/>
+								List
+							</Button>
+						</ButtonGroup>
 					</div>
 				</div>
 
 				{/* Items */}
 				{filteredItems.length > 0 ? (
-					<section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-						{filteredItems.map((item) => (
-							(userSettings.themePreset === "keroppi"
+					<section className={view === "list" ? "mt-6 flex flex-col gap-3" : "mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"}>
+						{filteredItems.map((item) => {
+							const watchlistActions = {
+								watched: item.watched,
+								disabled: actionsPending,
+								onToggleWatched: () => {
+									if (actionsPending || actionInFlight.current) return;
+									actionInFlight.current = true;
+									setWatched.mutate({watchlistId: watchlist.id, titleId: item.id, watched: !item.watched});
+								},
+								onRemove: isOwner ? () => {
+									if (actionsPending || actionInFlight.current) return;
+									setTitleToRemove({id: item.id, name: item.name});
+								} : undefined,
+							};
+
+							if (view === "list") {
+								return <DisplayRow
+									key={`wl-item-row-${item.id}`}
+									posterUrl={item.posterUrl}
+									title={item.name}
+									mediaType={item.mediaType}
+									year={item.year}
+									runtime={item.runtime}
+									watchlistActions={watchlistActions}
+								/>;
+							}
+
+							return (userSettings.themePreset === "keroppi"
 								? <DvdCase
 										key={`wl-item-case-${item.id}`}
 										posterUrl={item.posterUrl}
@@ -278,19 +329,7 @@ function RouteComponent() {
 										subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
 										description="PLACEHOLDER DESCRIPTION"
 										metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
-										watchlistActions={{
-											watched: item.watched,
-											disabled: actionsPending,
-											onToggleWatched: () => {
-												if (actionsPending || actionInFlight.current) return;
-												actionInFlight.current = true;
-												setWatched.mutate({watchlistId: watchlist.id, titleId: item.id, watched: !item.watched});
-											},
-											onRemove: isOwner ? () => {
-												if (actionsPending || actionInFlight.current) return;
-												setTitleToRemove({id: item.id, name: item.name});
-											} : undefined,
-										}}
+										watchlistActions={watchlistActions}
 									/>
 								: <DisplayCard
 									key={`wl-item-card-${item.id}`}
@@ -306,8 +345,8 @@ function RouteComponent() {
 										</div>
 									)}
 								/>
-							)
-						))}
+							);
+						})}
 					</section>
 
 				) : (
