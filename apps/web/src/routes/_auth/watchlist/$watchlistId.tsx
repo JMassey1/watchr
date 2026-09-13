@@ -63,7 +63,7 @@ function RouteComponent() {
 
 	const [filter, setFilter] = useState<ItemFilter>("all");
 	const [itemQuery, setItemQuery] = useState<string>("");
-	const [view, setView] = useState<"cards" | "list">("cards");
+	const [view, setView] = useState<"cards" | "list" | "dvd">("cards");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
 	const [titleToRemove, setTitleToRemove] = useState<{id: number; name: string} | null>(null);
 
@@ -266,25 +266,37 @@ function RouteComponent() {
 							/>
 						</div>
 						<ButtonGroup aria-label="Title view" className="inline-flex self-start rounded-xl border border-border bg-card p-1">
+							{userSettings.themePreset === "keroppi" && (
+								<Button
+									type="button"
+									size="icon"
+									variant={view === "dvd" ? "default" : "secondary"}
+									onClick={() => setView("dvd")}
+									aria-pressed={view === "dvd"}
+									className="rounded-lg p-0 text-sm font-medium transition-colors"
+								>
+									<img src="/keroppi_icon.png" className="size-7 shrink-0" aria-hidden="true" alt="Keroppi"/>
+								</Button>
+							)}
 							<Button
 								type="button"
+								size="icon"
 								variant={view === "cards" ? "default" : "secondary"}
 								onClick={() => setView("cards")}
 								aria-pressed={view === "cards"}
 								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
 							>
 								<LayoutGrid className="size-4" aria-hidden="true"/>
-								{userSettings.themePreset === "keroppi" ? "DVDs" : "Cards"}
 							</Button>
 							<Button
 								type="button"
+								size="icon"
 								variant={view === "list" ? "default" : "secondary"}
 								onClick={() => setView("list")}
 								aria-pressed={view === "list"}
 								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
 							>
 								<List className="size-4" aria-hidden="true"/>
-								List
 							</Button>
 						</ButtonGroup>
 					</div>
@@ -318,20 +330,19 @@ function RouteComponent() {
 									runtime={item.runtime}
 									watchlistActions={watchlistActions}
 								/>;
-							}
-
-							return (userSettings.themePreset === "keroppi"
-								? <DvdCase
-										key={`wl-item-case-${item.id}`}
-										posterUrl={item.posterUrl}
-										posterAlt={`${item.name} Cover`}
-										title={item.name}
-										subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
-										description="PLACEHOLDER DESCRIPTION"
-										metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
-										watchlistActions={watchlistActions}
-									/>
-								: <DisplayCard
+							} else if (view === "dvd") {
+								return <DvdCase
+									key={`wl-item-case-${item.id}`}
+									posterUrl={item.posterUrl}
+									posterAlt={`${item.name} Cover`}
+									title={item.name}
+									subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
+									description="PLACEHOLDER DESCRIPTION"
+									metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
+									watchlistActions={watchlistActions}
+								/>
+							} else {
+								return <DisplayCard
 									key={`wl-item-card-${item.id}`}
 									coverImage={item.posterUrl}
 									badge={item.mediaType === "movie" ? "Movie" : "TV"}
@@ -345,7 +356,7 @@ function RouteComponent() {
 										</div>
 									)}
 								/>
-							);
+							}
 						})}
 					</section>
 
