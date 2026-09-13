@@ -41,7 +41,9 @@ export default function UserMenu() {
       <DropdownMenuContent className="bg-card">
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          {session.user.role === "admin" && <ApiConnectionStatus />}
+          {session.user.role === "admin" && (<>
+            <ApiConnectionStatus />
+          </>)}
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
           <DropdownMenuItem render={<Link to="/settings" />}>
