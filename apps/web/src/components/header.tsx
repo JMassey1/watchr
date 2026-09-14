@@ -12,7 +12,9 @@ export default function Header() {
 		<div>
 			<div className="flex flex-row items-center justify-between px-2 py-1">
 				<nav className="flex gap-4 text-lg items-center">
-					<Icon icon="f7:leaf-arrow-circlepath" className="size-9"/>
+					<Link key="/" to="/">
+						<Icon icon="f7:leaf-arrow-circlepath" className="size-9"/>
+					</Link>
 					<Link key="/dashboard" to="/dashboard" className="">
 						Dashboard
 					</Link>
