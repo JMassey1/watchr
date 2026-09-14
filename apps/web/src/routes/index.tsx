@@ -21,8 +21,18 @@ function HomeComponent() {
 					<p className="mt-6 max-w-lg text-base leading-7 text-muted-foreground sm:text-lg">
 						Collect what you want to watch, share the list, and decide what comes next together.
 					</p>
-					<div className="mt-8">
-						<Link to="/dashboard" className={buttonVariants({size: "lg"})}>
+					<div className="mt-8 flex flex-wrap gap-3">
+						<Link
+							to="/login"
+							search={{mode: "sign-up"}}
+							className={buttonVariants({size: "lg"})}
+						>
+							Create account
+						</Link>
+						<Link
+							to="/dashboard"
+							className={buttonVariants({variant: "outline", size: "lg"})}
+						>
 							Open your dashboard
 						</Link>
 					</div>
@@ -31,7 +41,7 @@ function HomeComponent() {
 					</p>
 				</div>
 
-				<div className="flex min-h-[32rem] items-center justify-center rounded-xl border border-border bg-card px-4 py-12 sm:px-12 lg:justify-end lg:pl-64 lg:pr-12">
+				<div className="flex min-h-[32rem] items-center justify-center px-4 py-12 sm:px-12 lg:justify-end lg:pl-64 lg:pr-12">
 					<DvdCase
 						posterUrl="/frieren_cover_tmdb.png"
 						posterAlt="Frieren: Beyond Journey's End cover"
@@ -40,6 +50,46 @@ function HomeComponent() {
 						description="An elf mage retraces the road her fallen companions once walked."
 						metadata={["2023", "28 episodes"]}
 					/>
+				</div>
+			</section>
+
+			<section className="border-t border-border bg-card">
+				<div className="mx-auto w-full max-w-7xl px-6 py-20 md:px-10 md:py-28">
+					<div className="mx-auto max-w-2xl text-center">
+						<p className="mb-4 text-sm font-medium uppercase tracking-[0.18em] text-primary">
+							How it works
+						</p>
+						<h2 className="font-serif text-3xl leading-tight tracking-tight sm:text-4xl">
+							One watchlist. Everyone on the same page.
+						</h2>
+						<p className="mt-5 text-base leading-7 text-muted-foreground sm:text-lg">
+							Create shared watchlists, add movie and TV titles, and track what you have watched together.
+						</p>
+					</div>
+
+					<div className="mt-14 grid gap-8 md:grid-cols-3 md:gap-10">
+						<div className="border-t border-border pt-6">
+							<p className="text-sm font-medium tracking-[0.18em] text-muted-foreground">01</p>
+							<h3 className="mt-4 font-serif text-xl">Bring everyone together</h3>
+							<p className="mt-3 leading-7 text-muted-foreground">
+								Create a watchlist and share it with the members you watch with.
+							</p>
+						</div>
+						<div className="border-t border-border pt-6">
+							<p className="text-sm font-medium tracking-[0.18em] text-muted-foreground">02</p>
+							<h3 className="mt-4 font-serif text-xl">Build your queue</h3>
+							<p className="mt-3 leading-7 text-muted-foreground">
+								Add the movies and TV titles your group wants to watch next.
+							</p>
+						</div>
+						<div className="border-t border-border pt-6">
+							<p className="text-sm font-medium tracking-[0.18em] text-muted-foreground">03</p>
+							<h3 className="mt-4 font-serif text-xl">Keep up with progress</h3>
+							<p className="mt-3 leading-7 text-muted-foreground">
+								Mark titles as watched and see your shared progress at a glance.
+							</p>
+						</div>
+					</div>
 				</div>
 			</section>
 		</main>
