@@ -371,29 +371,37 @@ function RouteComponent() {
 								} : undefined,
 							};
 
-							const contextMenu = (children: ReactNode) => (
+							const withContextMenu = (children: ReactNode) => (
 								<ContextMenu key={item.id}>
-									<ContextMenuTrigger>{children}</ContextMenuTrigger>
+									<ContextMenuTrigger className="h-full min-w-0">{children}</ContextMenuTrigger>
 									<ContextMenuContent>
-										<ContextMenuItem>
+										<ContextMenuItem
+											disabled={watchlistActions.disabled}
+											onClick={watchlistActions.onToggleWatched}
+										>
 											{watchlistActions.watched ?
-												<Eye aria-hidden="true" className="size-5"/> :
-												<EyeOff aria-hidden="true" className="size-5"/>}
-											{watchlistActions.watched ? "Watched" : "Unwatched"}
+												<EyeOff aria-hidden="true" className="size-5"/> :
+												<Eye aria-hidden="true" className="size-5"/>}
+											{watchlistActions.watched ? "Mark as unwatched" : "Mark as watched"}
 										</ContextMenuItem>
-										<ContextMenuItem variant="destructive">
-											<Trash2 aria-hidden="true" className="size-5" />
-											Remove
-										</ContextMenuItem>
+										{watchlistActions.onRemove && (
+											<ContextMenuItem
+												variant="destructive"
+												disabled={watchlistActions.disabled}
+												onClick={watchlistActions.onRemove}
+											>
+												<Trash2 aria-hidden="true" className="size-5" />
+												Remove from watchlist
+											</ContextMenuItem>
+										)}
 
 									</ContextMenuContent>
 								</ContextMenu>
 							)
 
 							if (view === "list") {
-								return contextMenu(
+								return withContextMenu(
 									<DisplayRow
-										key={`wl-item-row-${item.id}`}
 										posterUrl={item.posterUrl}
 										title={item.name}
 										mediaType={item.mediaType}
@@ -403,11 +411,11 @@ function RouteComponent() {
 									/>
 								);
 							} else if (view === "dvd") {
-								return contextMenu(
+								return withContextMenu(
 									<DvdCase
-										key={`wl-item-case-${item.id}`}
 										posterUrl={item.posterUrl}
 										posterAlt={`${item.name} Cover`}
+										posterGrey={item.watched}
 										title={item.name}
 										subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
 										description="PLACEHOLDER DESCRIPTION"
@@ -416,18 +424,20 @@ function RouteComponent() {
 									/>
 								);
 							} else {
-								return contextMenu(
+								return withContextMenu(
 									<DisplayCard
-										key={`wl-item-card-${item.id}`}
 										coverImage={item.posterUrl}
+										isWatched={item.watched}
 										badge={item.mediaType === "movie" ? "Movie" : "TV"}
 										cornerLabel={item.watched ? "Watched" : null}
 										footer={(
-											<div className="space-y-1.5">
-												<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
-												<p className="text-sm text-muted-foreground">
-													{item.year} &middot; {item.runtime}
-												</p>
+											<div className="flex min-w-0 flex-wrap items-end gap-3">
+												<div className="min-w-0 flex-1 space-y-1.5">
+													<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
+													<p className="text-sm text-muted-foreground">
+														{item.year} &middot; {item.runtime}
+													</p>
+												</div>
 											</div>
 										)}
 									/>

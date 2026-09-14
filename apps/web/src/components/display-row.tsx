@@ -13,11 +13,17 @@ type DisplayRowProps = {
 		onRemove?: () => void;
 		disabled?: boolean;
 	};
+	disableHoverEffect?: boolean;
 };
 
-export function DisplayRow({posterUrl, title, mediaType, year, runtime, watchlistActions}: DisplayRowProps) {
+export function DisplayRow({posterUrl, title, mediaType, year, runtime, watchlistActions, disableHoverEffect = false}: DisplayRowProps) {
+
+	const hoverClassname = disableHoverEffect
+		? ""
+		: "transition-[border-color,box-shadow] hover:border-primary hover:shadow-lg hover:shadow-black/5";
+
 	return (
-		<article className="flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 sm:gap-4">
+		<article className={`flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-card p-3 sm:gap-4 ${hoverClassname}`}>
 			<img
 				src={posterUrl?.trim() || "/placeholder.svg"}
 				alt={`Cover art for ${title}`}

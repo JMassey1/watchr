@@ -5,6 +5,7 @@ import {Eye, EyeOff, Trash2} from "lucide-react";
 export type DvdCaseProps = {
 	posterUrl: string;
 	posterAlt: string;
+	posterGrey?: boolean;
 	title: string;
 	subtitle: string;
 	description: string;
@@ -29,6 +30,7 @@ const SPRING = {type: "spring" as const, stiffness: 120, damping: 22, mass: 0.9}
 export default function DvdCase({
 	posterUrl,
 	posterAlt,
+	posterGrey = false,
 	title,
 	subtitle,
 	description,
@@ -50,7 +52,7 @@ export default function DvdCase({
 			className="group relative transform-3d"
 			style={{width: `min(100%, ${CASE_WIDTH_PX}px)`, aspectRatio: `${CASE_WIDTH_PX} / ${CASE_HEIGHT_PX}`}}
 			initial={false}
-			whileHover={open || reduceMotion ? undefined : {rotateY: SPINE_PREVIEW_ROTATION_DEG}}
+			whileHover={open || reduceMotion || posterGrey ? undefined : {rotateY: SPINE_PREVIEW_ROTATION_DEG}}
 			onHoverStart={() => setIsHovering(true)}
 			onHoverEnd={() => setIsHovering(false)}
 			transition={reduceMotion ? {duration: 0} : SPRING}
@@ -167,6 +169,7 @@ export default function DvdCase({
 						<img
 							src={posterUrl}
 							alt={posterAlt}
+							style={posterGrey ? {filter: "grayscale(100%)"} : undefined}
 							className="h-full w-full object-cover"
 							draggable={false}
 						/>
