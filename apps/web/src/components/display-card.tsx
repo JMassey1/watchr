@@ -1,6 +1,7 @@
 import {Link, LinkProps} from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import {Check} from "lucide-react";
+import {Progress} from "@watch3r/ui/components/progress";
 
 type DisplayCardProps = {
 	coverImage?: string | null;
@@ -77,6 +78,7 @@ export function DisplayCard(props: DisplayCardProps) {
 							</span>
 							<span>{progressPercent}%</span>
 						</div>
+						<Progress value={progressPercent} className="h-1.5 w-full" />
 					</div>
 				)}
 

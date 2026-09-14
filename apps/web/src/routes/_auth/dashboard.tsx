@@ -70,12 +70,11 @@ function RouteComponent() {
 			icon: Users
 		},
 		{
-			label: "Titles queued",
-			value: 67,
+			label: "Titles to watch",
+			value: `${myWatchlists.data?.reduce((acc, wl) => acc + wl.unwatchedCount, 0)}`,
 			icon: Clapperboard
 		},
 	]
-	//TODO: ^^ Implement route to get number of items in all lists for a user.
 
 	return (
 		<div className="mih-h-screen">

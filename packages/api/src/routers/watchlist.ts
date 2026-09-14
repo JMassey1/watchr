@@ -78,6 +78,10 @@ export const watchlistRouter = router({
 					coverImage: watchlist.coverImage,
 					updatedAt: watchlist.updatedAt,
 					createdAt: watchlist.createdAt,
+
+					itemCount: db.$count(watchlistItem, eq(watchlistItem.watchlistId, watchlist.id)),
+					watchedCount: db.$count(watchlistItem, and(eq(watchlistItem.watchlistId, watchlist.id), eq(watchlistItem.watched, true))),
+					unwatchedCount: db.$count(watchlistItem, and(eq(watchlistItem.watchlistId, watchlist.id), eq(watchlistItem.watched, false))),
 				})
 				.from(watchlistMember)
 				.innerJoin(watchlist, eq(watchlistMember.watchlistId, watchlist.id))
