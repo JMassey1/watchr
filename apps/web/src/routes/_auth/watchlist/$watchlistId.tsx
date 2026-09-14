@@ -79,7 +79,7 @@ const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 function RouteComponent() {
 	const {watchlist} = Route.useLoaderData();
 	const {session} = Route.useRouteContext();
-	const user = session.data?.user;
+	const user = session.user;
 	const {data: userSettings} = useSuspenseQuery(
 		trpc.user.settings.queryOptions()
 	)

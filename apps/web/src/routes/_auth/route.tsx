@@ -9,8 +9,10 @@ import { trpc } from "@/utils/trpc";
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
   beforeLoad: async ({ context }) => {
-    const session = await authClient.getSession();
-    if (!session.data) {
+    const result = await authClient.getSession();
+    const session = result.data;
+
+    if (!session) {
       throw redirect({
         to: "/login",
       });

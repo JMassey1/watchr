@@ -46,7 +46,7 @@ function RouteComponent() {
 
 	const filteredWatchlists = useMemo(() => {
 		const data = myWatchlists.data ?? [];
-		const userId = session.data?.user.id;
+		const userId = session.user.id;
 		const q = watchlistQuery.trim().toLowerCase();
 
 		return data.filter((wl) => {
@@ -55,18 +55,18 @@ function RouteComponent() {
 			return !(q && !wl.name.toLowerCase().includes(q));
 
 		});
-	}, [myWatchlists.data, session.data?.user.id, filter, watchlistQuery]);
+	}, [myWatchlists.data, session.user.id, filter, watchlistQuery]);
 
 	const stats = [
 		{label: "Watchlists", value: myWatchlists.data?.length, icon: Film},
 		{
 			label: "Owned by you",
-			value: myWatchlists.data?.filter((wl) => wl.ownerId === session.data?.user.id).length,
+			value: myWatchlists.data?.filter((wl) => wl.ownerId === session.user.id).length,
 			icon: Crown
 		},
 		{
 			label: "Shared with you",
-			value: myWatchlists.data?.filter((wl) => wl.ownerId !== session.data?.user.id).length,
+			value: myWatchlists.data?.filter((wl) => wl.ownerId !== session.user.id).length,
 			icon: Users
 		},
 		{
