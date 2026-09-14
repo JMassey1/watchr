@@ -36,6 +36,7 @@ export default function DvdCase({
 	watchlistActions,
 }: DvdCaseProps) {
 	const [open, setOpen] = useState(false);
+	const [isHovering, setIsHovering] = useState(false);
 	const reduceMotion = useReducedMotion();
 
 	const toggle = () => setOpen((v) => !v);
@@ -50,10 +51,12 @@ export default function DvdCase({
 			style={{width: `min(100%, ${CASE_WIDTH_PX}px)`, aspectRatio: `${CASE_WIDTH_PX} / ${CASE_HEIGHT_PX}`}}
 			initial={false}
 			whileHover={open || reduceMotion ? undefined : {rotateY: SPINE_PREVIEW_ROTATION_DEG}}
+			onHoverStart={() => setIsHovering(true)}
+			onHoverEnd={() => setIsHovering(false)}
 			transition={reduceMotion ? {duration: 0} : SPRING}
 		>
 			{/* Keep actions separate from the case-opening button and inset for narrow screens. */}
-			{watchlistActions && !open ? (
+			{watchlistActions && (open || (!open && isHovering)) ? (
 				<div
 					className="absolute left-2 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-1 rounded-md border border-black/40 bg-neutral-900/95 p-1 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.7)]"
 				>

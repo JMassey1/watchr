@@ -1,18 +1,34 @@
 import {createFileRoute, Link, redirect} from '@tanstack/react-router'
-import {useMemo, useRef, useState} from "react";
+import {ReactNode, useMemo, useRef, useState} from "react";
 import {useMutation, useQuery, useSuspenseQuery} from "@tanstack/react-query";
 import {Button, buttonVariants} from "@watch3r/ui/components/button";
 import {
 	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
 	AlertDialogContent,
-	AlertDialogHeader,
-	AlertDialogTitle,
 	AlertDialogDescription,
 	AlertDialogFooter,
-	AlertDialogCancel,
-	AlertDialogAction,
+	AlertDialogHeader,
+	AlertDialogTitle,
 } from "@watch3r/ui/components/alert-dialog";
-import {ArrowLeft, Check, Clapperboard, Crown, Film, LayoutGrid, List, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
+import {
+	ArrowLeft,
+	Check,
+	Clapperboard,
+	Crown,
+	Eye,
+	EyeOff,
+	Film,
+	LayoutGrid,
+	List,
+	Plus,
+	Search,
+	Settings,
+	ShieldPlus,
+	Trash2,
+	Users
+} from "lucide-react";
 import {queryClient, trpc} from "@/utils/trpc";
 import {MemberStack} from "@/components/member-stack";
 import {AddTitleDialog} from "@/components/add-title-dialog";
@@ -22,6 +38,13 @@ import {DisplayRow} from "@/components/display-row";
 import DvdCase from "@/components/dvd-case";
 import {toast} from "sonner";
 import {ButtonGroup} from "@watch3r/ui/components/button-group";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuGroup,
+	ContextMenuItem,
+	ContextMenuTrigger
+} from "@watch3r/ui/components/context-menu";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	loader: async ({params}) => {
@@ -57,7 +80,7 @@ function RouteComponent() {
 	const {watchlist} = Route.useLoaderData();
 	const {session} = Route.useRouteContext();
 	const user = session.data?.user;
-	const { data: userSettings } = useSuspenseQuery(
+	const {data: userSettings} = useSuspenseQuery(
 		trpc.user.settings.queryOptions()
 	)
 
@@ -65,7 +88,7 @@ function RouteComponent() {
 	const [itemQuery, setItemQuery] = useState<string>("");
 	const [view, setView] = useState<"cards" | "list" | "dvd">("cards");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
-	const [titleToRemove, setTitleToRemove] = useState<{id: number; name: string} | null>(null);
+	const [titleToRemove, setTitleToRemove] = useState<{ id: number; name: string } | null>(null);
 
 	const watchlistMembers = useQuery(
 		trpc.watchlist.getWatchlistMembers.queryOptions({watchlistId: watchlist.id})
@@ -98,7 +121,9 @@ function RouteComponent() {
 				toast.error("Couldn't update watched status");
 				console.error("Error updating watched status", err);
 			},
-			onSettled: () => { actionInFlight.current = false; },
+			onSettled: () => {
+				actionInFlight.current = false;
+			},
 		}),
 	);
 	const removeItem = useMutation(
@@ -120,7 +145,9 @@ function RouteComponent() {
 				toast.error("Couldn't remove title from watchlist");
 				console.error("Error removing title from watchlist", err);
 			},
-			onSettled: () => { actionInFlight.current = false; },
+			onSettled: () => {
+				actionInFlight.current = false;
+			},
 		}),
 	);
 	const actionsPending = setWatched.isPending || removeItem.isPending;
@@ -265,7 +292,8 @@ function RouteComponent() {
 								className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-sm outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/40"
 							/>
 						</div>
-						<ButtonGroup aria-label="Title view" className="inline-flex self-start rounded-xl border border-border bg-card p-1">
+						<ButtonGroup aria-label="Title view"
+									 className="inline-flex self-start rounded-xl border border-border bg-card p-1">
 							{userSettings.themePreset === "keroppi" && (
 								<Button
 									type="button"
@@ -275,7 +303,8 @@ function RouteComponent() {
 									aria-pressed={view === "dvd"}
 									className="rounded-lg p-0 text-sm font-medium transition-colors"
 								>
-									<img src="/keroppi_icon.png" className="size-7 shrink-0" aria-hidden="true" alt="Keroppi"/>
+									<img src="/keroppi_icon.png" className="size-7 shrink-0" aria-hidden="true"
+										 alt="Keroppi"/>
 								</Button>
 							)}
 							<Button
@@ -304,7 +333,8 @@ function RouteComponent() {
 
 				{/* Items */}
 				{filteredItems.length > 0 ? (
-					<section className={view === "list" ? "mt-6 flex flex-col gap-3" : "mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"}>
+					<section
+						className={view === "list" ? "mt-6 flex flex-col gap-3" : "mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"}>
 						{filteredItems.map((item) => {
 							const watchlistActions = {
 								watched: item.watched,
@@ -312,7 +342,11 @@ function RouteComponent() {
 								onToggleWatched: () => {
 									if (actionsPending || actionInFlight.current) return;
 									actionInFlight.current = true;
-									setWatched.mutate({watchlistId: watchlist.id, titleId: item.id, watched: !item.watched});
+									setWatched.mutate({
+										watchlistId: watchlist.id,
+										titleId: item.id,
+										watched: !item.watched
+									});
 								},
 								onRemove: isOwner ? () => {
 									if (actionsPending || actionInFlight.current) return;
@@ -320,42 +354,67 @@ function RouteComponent() {
 								} : undefined,
 							};
 
+							const contextMenu = (children: ReactNode) => (
+								<ContextMenu>
+									<ContextMenuTrigger>{children}</ContextMenuTrigger>
+									<ContextMenuContent>
+										<ContextMenuItem>
+											{watchlistActions.watched ?
+												<Eye aria-hidden="true" className="size-5"/> :
+												<EyeOff aria-hidden="true" className="size-5"/>}
+											{watchlistActions.watched ? "Watched" : "Unwatched"}
+										</ContextMenuItem>
+										<ContextMenuItem variant="destructive">
+											<Trash2 aria-hidden="true" className="size-5" />
+											Remove
+										</ContextMenuItem>
+
+									</ContextMenuContent>
+								</ContextMenu>
+							)
+
 							if (view === "list") {
-								return <DisplayRow
-									key={`wl-item-row-${item.id}`}
-									posterUrl={item.posterUrl}
-									title={item.name}
-									mediaType={item.mediaType}
-									year={item.year}
-									runtime={item.runtime}
-									watchlistActions={watchlistActions}
-								/>;
+								return contextMenu(
+									<DisplayRow
+										key={`wl-item-row-${item.id}`}
+										posterUrl={item.posterUrl}
+										title={item.name}
+										mediaType={item.mediaType}
+										year={item.year}
+										runtime={item.runtime}
+										watchlistActions={watchlistActions}
+									/>
+								);
 							} else if (view === "dvd") {
-								return <DvdCase
-									key={`wl-item-case-${item.id}`}
-									posterUrl={item.posterUrl}
-									posterAlt={`${item.name} Cover`}
-									title={item.name}
-									subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
-									description="PLACEHOLDER DESCRIPTION"
-									metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
-									watchlistActions={watchlistActions}
-								/>
+								return contextMenu(
+									<DvdCase
+										key={`wl-item-case-${item.id}`}
+										posterUrl={item.posterUrl}
+										posterAlt={`${item.name} Cover`}
+										title={item.name}
+										subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
+										description="PLACEHOLDER DESCRIPTION"
+										metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
+										watchlistActions={watchlistActions}
+									/>
+								);
 							} else {
-								return <DisplayCard
-									key={`wl-item-card-${item.id}`}
-									coverImage={item.posterUrl}
-									badge={item.mediaType === "movie" ? "Movie" : "TV"}
-									cornerLabel={item.watched ? "Watched" : null}
-									footer={(
-										<div className="space-y-1.5">
-											<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
-											<p className="text-sm text-muted-foreground">
-												{item.year} &middot; {item.runtime}
-											</p>
-										</div>
-									)}
-								/>
+								return contextMenu(
+									<DisplayCard
+										key={`wl-item-card-${item.id}`}
+										coverImage={item.posterUrl}
+										badge={item.mediaType === "movie" ? "Movie" : "TV"}
+										cornerLabel={item.watched ? "Watched" : null}
+										footer={(
+											<div className="space-y-1.5">
+												<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
+												<p className="text-sm text-muted-foreground">
+													{item.year} &middot; {item.runtime}
+												</p>
+											</div>
+										)}
+									/>
+								);
 							}
 						})}
 					</section>
