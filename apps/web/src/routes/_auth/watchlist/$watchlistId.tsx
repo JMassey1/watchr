@@ -41,10 +41,10 @@ import {ButtonGroup} from "@watch3r/ui/components/button-group";
 import {
 	ContextMenu,
 	ContextMenuContent,
-	ContextMenuGroup,
 	ContextMenuItem,
 	ContextMenuTrigger
 } from "@watch3r/ui/components/context-menu";
+import {useUserLocalStorage} from "@/hooks/use-user-local-storage";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	loader: async ({params}) => {
@@ -84,9 +84,10 @@ function RouteComponent() {
 		trpc.user.settings.queryOptions()
 	)
 
-	const [filter, setFilter] = useState<ItemFilter>("all");
+	// const [filter, setFilter] = useState<ItemFilter>("all");
+	const [filter, setFilter] = useUserLocalStorage<ItemFilter>(user.id, "watchlist-filter", "all");
 	const [itemQuery, setItemQuery] = useState<string>("");
-	const [view, setView] = useState<"cards" | "list" | "dvd">("cards");
+	const [view, setView] = useUserLocalStorage<"cards" | "list" | "dvd">(user.id, "watchlist-view", "cards");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
 	const [titleToRemove, setTitleToRemove] = useState<{ id: number; name: string } | null>(null);
 
