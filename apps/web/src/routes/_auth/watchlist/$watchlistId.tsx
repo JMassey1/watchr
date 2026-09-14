@@ -70,6 +70,13 @@ export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 })
 
 type ItemFilter = "all" | "watched" | "unwatched";
+type WatchlistView = "cards" | "list" | "dvd";
+type WatchlistPreferences = {
+	filter: ItemFilter;
+	view: WatchlistView;
+};
+
+const DEFAULT_WATCHLIST_PREFERENCES: WatchlistPreferences = {filter: "all", view: "cards"};
 const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 	{key: "all", label: "All titles"},
 	{key: "unwatched", label: "To watch"},
@@ -84,10 +91,19 @@ function RouteComponent() {
 		trpc.user.settings.queryOptions()
 	)
 
-	// const [filter, setFilter] = useState<ItemFilter>("all");
-	const [filter, setFilter] = useUserLocalStorage<ItemFilter>(user.id, "watchlist-filter", "all");
+	const [preferences, setPreferences] = useUserLocalStorage<WatchlistPreferences>(
+		user.id,
+		"watchlist-preferences",
+		DEFAULT_WATCHLIST_PREFERENCES,
+	);
+	const {filter, view} = preferences;
+	const setFilter = (filter: ItemFilter) => {
+		setPreferences((current) => ({...current, filter}));
+	};
+	const setView = (view: WatchlistView) => {
+		setPreferences((current) => ({...current, view}));
+	};
 	const [itemQuery, setItemQuery] = useState<string>("");
-	const [view, setView] = useUserLocalStorage<"cards" | "list" | "dvd">(user.id, "watchlist-view", "cards");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
 	const [titleToRemove, setTitleToRemove] = useState<{ id: number; name: string } | null>(null);
 
