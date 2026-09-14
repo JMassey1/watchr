@@ -372,7 +372,7 @@ function RouteComponent() {
 							};
 
 							const contextMenu = (children: ReactNode) => (
-								<ContextMenu>
+								<ContextMenu key={item.id}>
 									<ContextMenuTrigger>{children}</ContextMenuTrigger>
 									<ContextMenuContent>
 										<ContextMenuItem>
