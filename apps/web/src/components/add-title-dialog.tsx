@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {useDebouncedValue} from "@tanstack/react-pacer";
 import {Film, Loader2, Plus, Search, Tv, X} from "lucide-react";
@@ -15,13 +15,20 @@ import {
 import {Input} from "@watch3r/ui/components/input";
 import {Button} from "@watch3r/ui/components/button";
 
-export function AddTitleDialog({watchlistId, open, onOpenChange}: {
+export function AddTitleDialog({watchlistId, presetValue, open, onOpenChange}: {
 	watchlistId: number;
+	presetValue?: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {
-	const [query, setQuery] = useState<string>("");
+	const [query, setQuery] = useState<string>(presetValue ?? "");
 	const [debouncedQuery] = useDebouncedValue(query, {wait: 500});
+	const wasOpen = useRef(false);
+
+	useEffect(() => {
+		if (open && !wasOpen.current) setQuery(presetValue ?? "");
+		wasOpen.current = open;
+	}, [open, presetValue]);
 
 	const isSearchable = debouncedQuery.trim().length >= 2;
 	const searchResults = useQuery(

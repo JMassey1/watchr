@@ -468,6 +468,7 @@ function RouteComponent() {
 
 			<AddTitleDialog
 				watchlistId={watchlist.id}
+				presetValue={itemQuery ?? undefined}
 				open={addTitleOpen}
 				onOpenChange={setAddTitleOpen}
 			/>
