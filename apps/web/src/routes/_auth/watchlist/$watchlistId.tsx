@@ -1,13 +1,50 @@
 import {createFileRoute, Link, redirect} from '@tanstack/react-router'
-import {useMemo, useState} from "react";
-import {useQuery} from "@tanstack/react-query";
+import {ReactNode, useMemo, useRef, useState} from "react";
+import {useMutation, useQuery, useSuspenseQuery} from "@tanstack/react-query";
 import {Button, buttonVariants} from "@watch3r/ui/components/button";
-import {ArrowLeft, Check, Clapperboard, Crown, Film, Plus, Search, Settings, Users, ShieldPlus} from "lucide-react";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@watch3r/ui/components/alert-dialog";
+import {
+	ArrowLeft,
+	Check,
+	Clapperboard,
+	Crown,
+	Eye,
+	EyeOff,
+	Film,
+	LayoutGrid,
+	List,
+	Plus,
+	Search,
+	Settings,
+	ShieldPlus,
+	Trash2,
+	Users
+} from "lucide-react";
 import {queryClient, trpc} from "@/utils/trpc";
 import {MemberStack} from "@/components/member-stack";
 import {AddTitleDialog} from "@/components/add-title-dialog";
 import {formatDateOnly} from "@/utils/dates";
 import {DisplayCard} from "@/components/display-card";
+import {DisplayRow} from "@/components/display-row";
+import DvdCase from "@/components/dvd-case";
+import {toast} from "sonner";
+import {ButtonGroup} from "@watch3r/ui/components/button-group";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger
+} from "@watch3r/ui/components/context-menu";
+import {useUserLocalStorage} from "@/hooks/use-user-local-storage";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 	loader: async ({params}) => {
@@ -33,6 +70,13 @@ export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
 })
 
 type ItemFilter = "all" | "watched" | "unwatched";
+type WatchlistView = "cards" | "list" | "dvd";
+type WatchlistPreferences = {
+	filter: ItemFilter;
+	view: WatchlistView;
+};
+
+const DEFAULT_WATCHLIST_PREFERENCES: WatchlistPreferences = {filter: "all", view: "cards"};
 const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 	{key: "all", label: "All titles"},
 	{key: "unwatched", label: "To watch"},
@@ -42,9 +86,26 @@ const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 function RouteComponent() {
 	const {watchlist} = Route.useLoaderData();
 	const {session} = Route.useRouteContext();
-	const [filter, setFilter] = useState<ItemFilter>("all");
+	const user = session.user;
+	const {data: userSettings} = useSuspenseQuery(
+		trpc.user.settings.queryOptions()
+	)
+
+	const [preferences, setPreferences] = useUserLocalStorage<WatchlistPreferences>(
+		user.id,
+		"watchlist-preferences",
+		DEFAULT_WATCHLIST_PREFERENCES,
+	);
+	const {filter, view} = preferences;
+	const setFilter = (filter: ItemFilter) => {
+		setPreferences((current) => ({...current, filter}));
+	};
+	const setView = (view: WatchlistView) => {
+		setPreferences((current) => ({...current, view}));
+	};
 	const [itemQuery, setItemQuery] = useState<string>("");
 	const [addTitleOpen, setAddTitleOpen] = useState<boolean>(false);
+	const [titleToRemove, setTitleToRemove] = useState<{ id: number; name: string } | null>(null);
 
 	const watchlistMembers = useQuery(
 		trpc.watchlist.getWatchlistMembers.queryOptions({watchlistId: watchlist.id})
@@ -52,8 +113,61 @@ function RouteComponent() {
 	const itemsQuery = useQuery(
 		trpc.watchlist.getItems.queryOptions({watchlistId: watchlist.id})
 	);
-	const isOwner = session.data?.user.id === watchlist.ownerId;
-	const isAdmin = session.data?.user.id === watchlistMembers.data?.some((m) => m.id === session.data?.user.id && m.role === "admin");
+	const isOwner = user?.id === watchlist.ownerId;
+	const isAdmin = watchlistMembers.data?.some((m) => m.id === user?.id && m.role === "admin");
+
+	// Also guard submissions before React renders the mutations' pending state.
+	const actionInFlight = useRef(false);
+	const setWatched = useMutation(
+		trpc.watchlist.setWatched.mutationOptions({
+			networkMode: "always",
+			retry: false,
+			onSuccess: async (updated, variables) => {
+				queryClient.setQueryData(
+					trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+					(previous) => previous?.map((item) =>
+						item.id === variables.titleId ? {...item, watched: updated.watched} : item,
+					),
+				);
+				await queryClient.invalidateQueries({
+					queryKey: trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+				});
+				toast.success(variables.watched ? "Title marked as watched" : "Title marked as unwatched");
+			},
+			onError: (err) => {
+				toast.error("Couldn't update watched status");
+				console.error("Error updating watched status", err);
+			},
+			onSettled: () => {
+				actionInFlight.current = false;
+			},
+		}),
+	);
+	const removeItem = useMutation(
+		trpc.watchlist.removeItem.mutationOptions({
+			networkMode: "always",
+			retry: false,
+			onSuccess: async (_item, variables) => {
+				queryClient.setQueryData(
+					trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+					(previous) => previous?.filter((item) => item.id !== variables.titleId),
+				);
+				await queryClient.invalidateQueries({
+					queryKey: trpc.watchlist.getItems.queryKey({watchlistId: variables.watchlistId}),
+				});
+				toast.success("Title removed from watchlist");
+				setTitleToRemove(null);
+			},
+			onError: (err) => {
+				toast.error("Couldn't remove title from watchlist");
+				console.error("Error removing title from watchlist", err);
+			},
+			onSettled: () => {
+				actionInFlight.current = false;
+			},
+		}),
+	);
+	const actionsPending = setWatched.isPending || removeItem.isPending;
 
 	const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 	const watchedCount = items.filter((item) => item.watched).length;
@@ -168,25 +282,22 @@ function RouteComponent() {
 				</div>
 
 				{/* Item Filters */}
-				<div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="inline-flex rounded-xl border border-border bg-card p-1">
+				<div className="mt-8 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+					<ButtonGroup className="inline-flex rounded-xl border border-border bg-card p-1">
 						{ITEM_FILTERS.map((f) => (
 							<Button
 								key={f.key}
+								variant={filter === f.key ? "default" : "secondary"}
 								onClick={() => setFilter(f.key)}
 								aria-pressed={filter === f.key}
-								className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-									filter === f.key
-										? "bg-primary text-primary-foreground"
-										: "text-muted-foreground hover:text-foreground"
-								}`}
+								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
 							>
 								{f.label}
 							</Button>
 						))}
-					</div>
+					</ButtonGroup>
 
-					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+					<div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
 						<div className="relative sm:w-64">
 							<Search
 								className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/>
@@ -198,28 +309,141 @@ function RouteComponent() {
 								className="h-10 w-full rounded-xl border border-input bg-card pl-9 pr-3 text-sm outline-none transition-shadow placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/40"
 							/>
 						</div>
+						<ButtonGroup aria-label="Title view"
+									 className="inline-flex self-start rounded-xl border border-border bg-card p-1">
+							{userSettings.themePreset === "keroppi" && (
+								<Button
+									type="button"
+									size="icon"
+									variant={view === "dvd" ? "default" : "secondary"}
+									onClick={() => setView("dvd")}
+									aria-pressed={view === "dvd"}
+									className="rounded-lg p-0 text-sm font-medium transition-colors"
+								>
+									<img src="/keroppi_icon.png" className="size-7 shrink-0" aria-hidden="true"
+										 alt="Keroppi"/>
+								</Button>
+							)}
+							<Button
+								type="button"
+								size="icon"
+								variant={view === "cards" ? "default" : "secondary"}
+								onClick={() => setView("cards")}
+								aria-pressed={view === "cards"}
+								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+							>
+								<LayoutGrid className="size-4" aria-hidden="true"/>
+							</Button>
+							<Button
+								type="button"
+								size="icon"
+								variant={view === "list" ? "default" : "secondary"}
+								onClick={() => setView("list")}
+								aria-pressed={view === "list"}
+								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+							>
+								<List className="size-4" aria-hidden="true"/>
+							</Button>
+						</ButtonGroup>
 					</div>
 				</div>
 
 				{/* Items */}
 				{filteredItems.length > 0 ? (
-					<section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-						{filteredItems.map((item) => (
-							<DisplayCard
-								key={`wl-item-card-${item.id}`}
-								coverImage={item.posterUrl}
-								badge={item.mediaType === "movie" ? "Movie" : "TV"}
-								cornerLabel={item.watched ? "Watched" : null}
-								footer={(
-									<div className="space-y-1.5">
-										<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
-										<p className="text-sm text-muted-foreground">
-											{item.year} &middot; {item.runtime}
-										</p>
-									</div>
-								)}
-							/>
-						))}
+					<section
+						className={view === "list" ? "mt-6 flex flex-col gap-3" : "mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"}>
+						{filteredItems.map((item) => {
+							const watchlistActions = {
+								watched: item.watched,
+								disabled: actionsPending,
+								onToggleWatched: () => {
+									if (actionsPending || actionInFlight.current) return;
+									actionInFlight.current = true;
+									setWatched.mutate({
+										watchlistId: watchlist.id,
+										titleId: item.id,
+										watched: !item.watched
+									});
+								},
+								onRemove: isOwner ? () => {
+									if (actionsPending || actionInFlight.current) return;
+									setTitleToRemove({id: item.id, name: item.name});
+								} : undefined,
+							};
+
+							const withContextMenu = (children: ReactNode) => (
+								<ContextMenu key={item.id}>
+									<ContextMenuTrigger className="h-full min-w-0">{children}</ContextMenuTrigger>
+									<ContextMenuContent>
+										<ContextMenuItem
+											disabled={watchlistActions.disabled}
+											onClick={watchlistActions.onToggleWatched}
+										>
+											{watchlistActions.watched ?
+												<EyeOff aria-hidden="true" className="size-5"/> :
+												<Eye aria-hidden="true" className="size-5"/>}
+											{watchlistActions.watched ? "Mark as unwatched" : "Mark as watched"}
+										</ContextMenuItem>
+										{watchlistActions.onRemove && (
+											<ContextMenuItem
+												variant="destructive"
+												disabled={watchlistActions.disabled}
+												onClick={watchlistActions.onRemove}
+											>
+												<Trash2 aria-hidden="true" className="size-5" />
+												Remove from watchlist
+											</ContextMenuItem>
+										)}
+
+									</ContextMenuContent>
+								</ContextMenu>
+							)
+
+							if (view === "list") {
+								return withContextMenu(
+									<DisplayRow
+										posterUrl={item.posterUrl}
+										title={item.name}
+										mediaType={item.mediaType}
+										year={item.year}
+										runtime={item.runtime}
+										watchlistActions={watchlistActions}
+									/>
+								);
+							} else if (view === "dvd") {
+								return withContextMenu(
+									<DvdCase
+										posterUrl={item.posterUrl}
+										posterAlt={`${item.name} Cover`}
+										posterGrey={item.watched}
+										title={item.name}
+										subtitle={item.runtime ?? "PLACEHOLDER SUBTITLE"}
+										description="PLACEHOLDER DESCRIPTION"
+										metadata={[item.mediaType === "movie" ? "Movie" : "TV", item.year?.toString() ?? "PLACEHOLDER YEAR"]}
+										watchlistActions={watchlistActions}
+									/>
+								);
+							} else {
+								return withContextMenu(
+									<DisplayCard
+										coverImage={item.posterUrl}
+										isWatched={item.watched}
+										badge={item.mediaType === "movie" ? "Movie" : "TV"}
+										cornerLabel={item.watched ? "Watched" : null}
+										footer={(
+											<div className="flex min-w-0 flex-wrap items-end gap-3">
+												<div className="min-w-0 flex-1 space-y-1.5">
+													<h3 className="font-serif text-lg font-semibold leading-tight text-balance">{item.name}</h3>
+													<p className="text-sm text-muted-foreground">
+														{item.year} &middot; {item.runtime}
+													</p>
+												</div>
+											</div>
+										)}
+									/>
+								);
+							}
+						})}
 					</section>
 
 				) : (
@@ -244,9 +468,42 @@ function RouteComponent() {
 
 			<AddTitleDialog
 				watchlistId={watchlist.id}
+				presetValue={itemQuery ?? undefined}
 				open={addTitleOpen}
 				onOpenChange={setAddTitleOpen}
 			/>
+			<AlertDialog
+				open={titleToRemove !== null}
+				onOpenChange={(open) => {
+					if (!open && !actionsPending && !actionInFlight.current) setTitleToRemove(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
+							Remove "{titleToRemove?.name}" from "{watchlist.name}"?
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							This only removes it from this watchlist, not from other watchlists or the title catalog.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={actionsPending}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							type="button"
+							variant="destructive"
+							disabled={actionsPending || !titleToRemove}
+							onClick={() => {
+								if (!titleToRemove || actionsPending || actionInFlight.current) return;
+								actionInFlight.current = true;
+								removeItem.mutate({watchlistId: watchlist.id, titleId: titleToRemove.id});
+							}}
+						>
+							{actionsPending ? "Removing..." : "Remove"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	)
 }

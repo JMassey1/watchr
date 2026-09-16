@@ -1,7 +1,20 @@
-import {pgTable, integer, text, pgEnum, timestamp, primaryKey, boolean, unique} from 'drizzle-orm/pg-core'
+import {
+    pgTable,
+    integer,
+    text,
+    pgEnum,
+    timestamp,
+    primaryKey,
+    boolean,
+    unique,
+    index,
+} from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from "drizzle-orm/zod";
-import {user} from "./auth";
+import {user} from "./user";
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Watchlist
+// ---------------------------------------------------------------------------------------------------------------------
 export const watchlistRoleEnum = pgEnum('role', ['owner', 'admin', 'user']);
 export type WatchlistRole = (typeof watchlistRoleEnum.enumValues)[number];
 export const watchlistRoles = Object.fromEntries(
@@ -23,6 +36,7 @@ export const watchlist = pgTable("watchlist", {
 export const watchlistInsertSchema = createInsertSchema(watchlist).partial({"ownerId": true});
 export const watchlistSelectSchema = createSelectSchema(watchlist);
 
+// Watchlist Members ---------------------------------------------------------------------------------------------------
 export const watchlistMember = pgTable("watchlist_members", {
     watchlistId: integer("watchlist_id").notNull().references(() => watchlist.id, {onDelete: "cascade"}),
     userId: text("user_id").notNull().references(() => user.id, {onDelete: "cascade"}),
@@ -34,14 +48,13 @@ export const watchlistMember = pgTable("watchlist_members", {
     ]
 )
 export const watchlistMemberInsertSchema = createInsertSchema(watchlistMember);
+// ---------------------------------------------------------------------------------------------------------------------
 
-// Media type mirrors TMDB's own values ('movie' | 'tv'). The UI's
-// 'movie' | 'series' wording is mapped in the API layer, not stored.
+// Watchlist Items -----------------------------------------------------------------------------------------------------
 export const mediaTypeEnum = pgEnum('media_type', ['movie', 'tv']);
 export type MediaType = (typeof mediaTypeEnum.enumValues)[number];
 
-// Local cache of a TMDB entry, deduped on (tmdbId, mediaType) so a title
-// referenced by multiple watchlists is stored once.
+// Local cache of a TMDB entry
 export const title = pgTable("title", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     tmdbId: integer("tmdb_id").notNull(),
@@ -53,10 +66,9 @@ export const title = pgTable("title", {
     runtime: text("runtime"),
     createdAt: timestamp("created_at", {mode: "date", withTimezone: true}).notNull().defaultNow(),
 }, (t) => [
+    // deduped on (tmdbId, mediaType) so a title referenced by multiple watchlists is stored once
     unique("title_tmdb_unique").on(t.tmdbId, t.mediaType),
 ])
-export const titleInsertSchema = createInsertSchema(title);
-export const titleSelectSchema = createSelectSchema(title);
 
 export const watchlistItem = pgTable("watchlist_items", {
     watchlistId: integer("watchlist_id").notNull().references(() => watchlist.id, {onDelete: "cascade"}),
@@ -67,5 +79,16 @@ export const watchlistItem = pgTable("watchlist_items", {
 }, (t) => [
     primaryKey({ columns: [t.watchlistId, t.titleId] }),
 ])
-export const watchlistItemInsertSchema = createInsertSchema(watchlistItem);
-export const watchlistItemSelectSchema = createSelectSchema(watchlistItem);
+// ---------------------------------------------------------------------------------------------------------------------
+
+// Watchlist Pins ------------------------------------------------------------------------------------------------------
+export const watchlistPin = pgTable("watchlist_pin", {
+    userId: text("user_id").notNull().references(() => user.id, {onDelete: "cascade"}),
+    watchlistId: integer("watchlist_id").notNull().references(() => watchlist.id, {onDelete: "cascade"}),
+    position: integer().notNull(),
+},
+    (t) => [
+        primaryKey({ columns: [t.userId, t.watchlistId]}),
+        index("pinned_watchlists_user_position").on(t.userId, t.position),
+    ]
+)

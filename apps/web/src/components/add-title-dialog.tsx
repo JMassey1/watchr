@@ -1,10 +1,20 @@
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {useDebouncedValue} from "@tanstack/react-pacer";
 import {Film, Loader2, Plus, Search, Tv, X} from "lucide-react";
 import {toast} from "sonner";
 
 import {queryClient, trpc} from "@/utils/trpc";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@watch3r/ui/components/alert-dialog";
 import {
 	Dialog,
 	DialogContent,
@@ -15,13 +25,22 @@ import {
 import {Input} from "@watch3r/ui/components/input";
 import {Button} from "@watch3r/ui/components/button";
 
-export function AddTitleDialog({watchlistId, open, onOpenChange}: {
+export function AddTitleDialog({watchlistId, presetValue, open, onOpenChange, confirmBeforeAdd = true}: {
 	watchlistId: number;
+	presetValue?: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	confirmBeforeAdd?: boolean;
 }) {
-	const [query, setQuery] = useState<string>("");
+	const [query, setQuery] = useState<string>(presetValue ?? "");
 	const [debouncedQuery] = useDebouncedValue(query, {wait: 500});
+	const wasOpen = useRef(false);
+	const addInFlight = useRef(false);
+
+	useEffect(() => {
+		if (open && !wasOpen.current) setQuery(presetValue ?? "");
+		wasOpen.current = open;
+	}, [open, presetValue]);
 
 	const isSearchable = debouncedQuery.trim().length >= 2;
 	const searchResults = useQuery(
@@ -30,6 +49,7 @@ export function AddTitleDialog({watchlistId, open, onOpenChange}: {
 			{enabled: isSearchable},
 		),
 	);
+	const [selectedResult, setSelectedResult] = useState<NonNullable<typeof searchResults.data>[number] | null>(null);
 
 	// Track which title is mid-add so we can show a spinner on that row only.
 	const [addingId, setAddingId] = useState<number | null>(null);
@@ -40,18 +60,35 @@ export function AddTitleDialog({watchlistId, open, onOpenChange}: {
 					queryKey: trpc.watchlist.getItems.queryKey({watchlistId}),
 				});
 				toast.success("Title added");
+				reset();
+				onOpenChange(false);
 			},
 			onError: (err) => {
 				toast.error("Couldn't add title");
 				console.error("Error adding title", err);
 			},
-			onSettled: () => setAddingId(null),
+			onSettled: () => {
+				addInFlight.current = false;
+				setAddingId(null);
+			},
 		}),
 	);
 
 	function reset() {
 		setQuery("");
 		setAddingId(null);
+		setSelectedResult(null);
+	}
+
+	function addResult(result: NonNullable<typeof searchResults.data>[number]) {
+		if (addItem.isPending || addInFlight.current) return;
+		addInFlight.current = true;
+		setAddingId(result.tmdbId);
+		addItem.mutate({
+			watchlistId,
+			tmdbId: result.tmdbId,
+			mediaType: result.mediaType,
+		});
 	}
 
 	const results = searchResults.data ?? [];
@@ -60,6 +97,7 @@ export function AddTitleDialog({watchlistId, open, onOpenChange}: {
 		<Dialog
 			open={open}
 			onOpenChange={(next) => {
+				if (!next && (addItem.isPending || addInFlight.current)) return;
 				if (!next) reset();
 				onOpenChange(next);
 			}}
@@ -158,12 +196,8 @@ export function AddTitleDialog({watchlistId, open, onOpenChange}: {
 												variant="outline"
 												disabled={isAdding || addItem.isPending}
 												onClick={() => {
-													setAddingId(result.tmdbId);
-													addItem.mutate({
-														watchlistId,
-														tmdbId: result.tmdbId,
-														mediaType: result.mediaType,
-													});
+													if (confirmBeforeAdd) setSelectedResult(result);
+													else addResult(result);
 												}}
 												className="gap-1.5"
 											>
@@ -182,6 +216,36 @@ export function AddTitleDialog({watchlistId, open, onOpenChange}: {
 					</section>
 				</div>
 			</DialogContent>
+			<AlertDialog
+				open={selectedResult !== null}
+				onOpenChange={(next) => {
+					if (!next && !addItem.isPending && !addInFlight.current) setSelectedResult(null);
+				}}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Add "{selectedResult?.title}"?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Add this {selectedResult?.mediaType === "tv" ? "series" : "movie"}
+							{selectedResult?.year ? ` (${selectedResult.year})` : ""} to your watchlist?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={addItem.isPending}>Cancel</AlertDialogCancel>
+						<AlertDialogAction
+							type="button"
+							disabled={addItem.isPending || !selectedResult}
+							onClick={() => {
+								if (selectedResult) addResult(selectedResult);
+							}}
+							className="gap-1.5"
+						>
+							{addItem.isPending && <Loader2 className="size-4 animate-spin"/>}
+							{addItem.isPending ? "Adding..." : "Add title"}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</Dialog>
 	);
 }

@@ -5,16 +5,16 @@ import {Crown, Users} from "lucide-react";
 import {MemberStack} from "@/components/member-stack";
 import {useQuery} from "@tanstack/react-query";
 import {trpc} from "@/utils/trpc";
+import type {inferRouterOutputs} from "@trpc/server";
+import type {AppRouter} from "@watch3r/api/routers/index";
 import {formatDateOnly} from "@/utils/dates";
 import {DisplayCard} from "@/components/display-card";
 
+type Watchlist = inferRouterOutputs<AppRouter>["watchlist"]["myWatchlists"][number];
 
-export function WatchlistCard({watchlist}: { watchlist: z.infer<typeof watchlistSelectSchema> }) {
+export function WatchlistCard({watchlist}: { watchlist: Watchlist }) {
 	const {data: session} = authClient.useSession();
 	const isOwner = session?.user.id === watchlist.ownerId;
-	const watched = 0; // TODO: Pull items from list
-	const total = 100; // ^^
-	const pct_watched = Math.round((watched / total) * 100);
 
 	const watchlistMembers = useQuery(
 		trpc.watchlist.getWatchlistMembers.queryOptions({watchlistId: watchlist.id})
@@ -42,8 +42,8 @@ export function WatchlistCard({watchlist}: { watchlist: z.infer<typeof watchlist
 					</>
 				)
 			}
-			cornerLabel={`${total} titles`}
-			progress={{ watched: 0, total}}
+			cornerLabel={`${watchlist.itemCount} titles`}
+			progress={{ watched: watchlist.watchedCount, total: watchlist.itemCount}}
 			footer={(
 				<div className="flex items-center justify-between">
 					<MemberStack users={watchlistMembers.data ?? []} size="sm"/>

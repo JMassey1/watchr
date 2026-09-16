@@ -1,36 +1,97 @@
-import {useQuery} from "@tanstack/react-query";
-import {createFileRoute} from "@tanstack/react-router";
+import {createFileRoute, Link} from "@tanstack/react-router";
+import {buttonVariants} from "@watch3r/ui/components/button";
 
-import {trpc} from "@/utils/trpc";
+import DvdCase from "@/components/dvd-case";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });
 
 function HomeComponent() {
-	const healthCheck = useQuery(trpc.healthCheck.queryOptions());
-
 	return (
-		<div className="container mx-auto max-w-3xl px-4 py-2">
-			<h1 className="overflow-x-auto font-mono text-lg">Watch3r</h1>
-			<div className="grid gap-6">
-				<section className="rounded-lg border p-4">
-					<h2 className="mb-2 font-medium">API Status</h2>
-					<div className="flex items-center gap-2">
-						<div
-							className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
-						/>
-						<span className="text-sm text-muted-foreground">
-              {healthCheck.isLoading
-				  ? "Checking..."
-				  : healthCheck.data
-					  ? "Connected"
-					  : "Disconnected"}
-            </span>
+		<main className="bg-background text-foreground">
+			<section className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[minmax(0,5fr)_minmax(38rem,7fr)] lg:gap-8">
+				<div className="max-w-xl">
+					<p className="mb-4 text-sm font-medium uppercase tracking-[0.18em] text-primary">
+						Your shelf, shared
+					</p>
+					<h1 className="font-serif text-4xl leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+						Keep a watchlist with the friends you watch with.
+					</h1>
+					<p className="mt-6 max-w-lg text-base leading-7 text-muted-foreground sm:text-lg">
+						Collect what you want to watch, share the list, and decide what comes next together.
+					</p>
+					<div className="mt-8 flex flex-wrap gap-3">
+						<Link
+							to="/login"
+							search={{mode: "sign-up"}}
+							className={buttonVariants({size: "lg"})}
+						>
+							Create account
+						</Link>
+						<Link
+							to="/dashboard"
+							className={buttonVariants({variant: "outline", size: "lg"})}
+						>
+							Open your dashboard
+						</Link>
 					</div>
-				</section>
+					<p className="mt-5 text-sm text-muted-foreground">
+						Click the case to open it.
+					</p>
+				</div>
 
-			</div>
-		</div>
+				<div className="flex min-h-[32rem] items-center justify-center px-4 py-12 sm:px-12 lg:justify-end lg:pl-64 lg:pr-12">
+					<DvdCase
+						posterUrl="/frieren_cover_tmdb.png"
+						posterAlt="Frieren: Beyond Journey's End cover"
+						title="Frieren: Beyond Journey's End"
+						subtitle="Volume One"
+						description="An elf mage retraces the road her fallen companions once walked."
+						metadata={["2023", "28 episodes"]}
+					/>
+				</div>
+			</section>
+
+			<section className="border-t border-border bg-card">
+				<div className="mx-auto w-full max-w-7xl px-6 py-20 md:px-10 md:py-28">
+					<div className="mx-auto max-w-2xl text-center">
+						<p className="mb-4 text-sm font-medium uppercase tracking-[0.18em] text-primary">
+							How it works
+						</p>
+						<h2 className="font-serif text-3xl leading-tight tracking-tight sm:text-4xl">
+							One watchlist. Everyone on the same page.
+						</h2>
+						<p className="mt-5 text-base leading-7 text-muted-foreground sm:text-lg">
+							Create shared watchlists, add movie and TV titles, and track what you have watched together.
+						</p>
+					</div>
+
+					<div className="mt-14 grid gap-8 md:grid-cols-3 md:gap-10">
+						<div className="border-t border-border pt-6">
+							<p className="text-sm font-medium tracking-[0.18em] text-muted-foreground">01</p>
+							<h3 className="mt-4 font-serif text-xl">Bring everyone together</h3>
+							<p className="mt-3 leading-7 text-muted-foreground">
+								Create a watchlist and share it with the members you watch with.
+							</p>
+						</div>
+						<div className="border-t border-border pt-6">
+							<p className="text-sm font-medium tracking-[0.18em] text-muted-foreground">02</p>
+							<h3 className="mt-4 font-serif text-xl">Build your queue</h3>
+							<p className="mt-3 leading-7 text-muted-foreground">
+								Add the movies and TV titles your group wants to watch next.
+							</p>
+						</div>
+						<div className="border-t border-border pt-6">
+							<p className="text-sm font-medium tracking-[0.18em] text-muted-foreground">03</p>
+							<h3 className="mt-4 font-serif text-xl">Keep up with progress</h3>
+							<p className="mt-3 leading-7 text-muted-foreground">
+								Mark titles as watched and see your shared progress at a glance.
+							</p>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
 	);
 }

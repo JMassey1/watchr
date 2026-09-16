@@ -1,4 +1,4 @@
-import {publicUserSchema} from "@watch3r/db/schema/auth";
+import {publicUserSchema} from "@watch3r/db/schema/user";
 import {z} from "zod";
 import {cn} from "@watch3r/ui/lib/utils";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@watch3r/ui/components/tooltip";

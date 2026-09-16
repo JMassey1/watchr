@@ -16,6 +16,8 @@ Forgejo is a Gitea fork and exposes a Gitea-compatible REST API, but there is **
 
 The tracker instance is on a Tailscale tail (`orbiter.taild7aa61.ts.net`), so any CLI/`curl` automation requires Tailscale connectivity + a personal access token from `https://orbiter.taild7aa61.ts.net/user/settings/applications`.
 
+**Token storage**: put the token in the repo's gitignored `.env` as `FORGEJO_TOKEN=<token>` (the `.env*` glob is already ignored — never commit it). Minimum scopes: `write:issue` and `read:repository` (add `read:user` only if a skill needs `/user`). A skill using the API should read it from the environment, e.g. `FORGEJO_TOKEN=$(grep -E '^FORGEJO_TOKEN=' .env | cut -d= -f2-)`, and send it as `-H "Authorization: token $FORGEJO_TOKEN"`. Never echo the token or write it into any tracked file.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
@@ -36,7 +38,7 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
 
 - **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far / Fog body. Create via web UI with that label.
 - **Child ticket**: an issue with `Part of #<map>` at the top of its body and a back-link added to the map's task list. Labels: `wayfinder:<type>` (`research`/`prototype`/`grilling`/`task`). Once claimed, the ticket is assigned to the driving dev.
-- **Blocking**: no native issue dependencies in Forgejo's stable tracker workflow by default — use a `Blocked by: #<n>, #<n>` line at the top of the child body. A ticket is unblocked when every blocker is closed. (If the instance has the dependencies feature enabled, use `api/v1/repos/jordan/watchr/issues/<n>/dependencies`.)
-- **Frontier query**: list the map's open children (web UI or API), drop any with an open `Blocked by` entry or an assignee; first in map order wins.
-- **Claim**: assign the issue to yourself in the web UI — the session's first write.
+- **Blocking**: this instance **has native issue dependencies enabled** — use them, so the block renders in Forgejo's own UI. To make `#<child>` blocked by `#<blocker>`: `POST api/v1/repos/jordan/watchr/issues/<child>/dependencies` with body `{"owner":"jordan","repo":"watchr","index":<blocker>}` (note the field is `repo`, **not** `name`; an unqualified `{"index":n}` fails with `IsErrRepoNotExist`). Read current blockers with `GET .../issues/<child>/dependencies`; a ticket is unblocked when every blocker is closed. Don't also add a `Blocked by:` body line — the native dependency is the single source of truth. (Fallback, only if a future instance disables the feature: a `Blocked by: #<n>` line at the top of the child body.)
+- **Frontier query**: list the map's open children (web UI, or `GET api/v1/repos/jordan/watchr/issues?state=open&type=issues`, filtering bodies for `Part of #<map>`), drop any with an open native dependency (see Blocking) or an assignee; first in map order wins.
+- **Claim**: assign the issue to the driving dev — the session's first write. Web UI, or `PATCH api/v1/repos/jordan/watchr/issues/<n>` with `{"assignees":["<login>"]}`.
 - **Resolve**: comment the answer on the child issue, close it, then append a context pointer (link) to the map's Decisions-so-far.

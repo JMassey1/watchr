@@ -8,6 +8,7 @@ import {CreateListDialog} from "@/components/create-list-dialog";
 import {toast} from "sonner";
 import {WatchlistCard} from "@/components/watchlist-card";
 import {Clapperboard, Crown, Film, Plus, Search, Settings, Users, Wrench} from "lucide-react";
+import {ButtonGroup} from "@watch3r/ui/components/button-group";
 
 export const Route = createFileRoute("/_auth/dashboard")({
 	component: RouteComponent,
@@ -45,7 +46,7 @@ function RouteComponent() {
 
 	const filteredWatchlists = useMemo(() => {
 		const data = myWatchlists.data ?? [];
-		const userId = session.data?.user.id;
+		const userId = session.user.id;
 		const q = watchlistQuery.trim().toLowerCase();
 
 		return data.filter((wl) => {
@@ -54,21 +55,25 @@ function RouteComponent() {
 			return !(q && !wl.name.toLowerCase().includes(q));
 
 		});
-	}, [myWatchlists.data, session.data?.user.id, filter, watchlistQuery]);
+	}, [myWatchlists.data, session.user.id, filter, watchlistQuery]);
 
 	const stats = [
 		{label: "Watchlists", value: myWatchlists.data?.length, icon: Film},
 		{
 			label: "Owned by you",
-			value: myWatchlists.data?.filter((wl) => wl.ownerId === session.data?.user.id).length,
+			value: myWatchlists.data?.filter((wl) => wl.ownerId === session.user.id).length,
 			icon: Crown
 		},
 		{
 			label: "Shared with you",
-			value: myWatchlists.data?.filter((wl) => wl.ownerId !== session.data?.user.id).length,
+			value: myWatchlists.data?.filter((wl) => wl.ownerId !== session.user.id).length,
 			icon: Users
 		},
-		{label: "Titles queued", value: 67, icon: Clapperboard},
+		{
+			label: "Titles to watch",
+			value: `${myWatchlists.data?.reduce((acc, wl) => acc + wl.unwatchedCount, 0)}`,
+			icon: Clapperboard
+		},
 	]
 
 	return (
@@ -100,32 +105,21 @@ function RouteComponent() {
 
 				{/* Watchlist Filters */}
 				<div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="inline-flex rounded-xl border border-border bg-card p-1">
+					<ButtonGroup className="inline-flex rounded-xl border border-border bg-card p-1">
 						{FILTERS.map((f) => (
 							<Button
 								key={f.key}
 								onClick={() => setFilter(f.key)}
 								aria-pressed={filter === f.key}
-								className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-									filter === f.key
-										? "bg-primary text-primary-foreground"
-										: "text-muted-foreground hover:text-foreground"
-								}`}
+								variant={filter === f.key ? "default" : "secondary"}
+								className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
 							>
 								{f.label}
 							</Button>
 						))}
-					</div>
+					</ButtonGroup>
 
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-						{session.data?.user.role === "admin" && (
-							<Link to="/admin/dashboard">
-								<Button className="gap-1.5">
-									<Wrench className="size-4"/>
-									Admin Settings
-								</Button>
-							</Link>
-						)}
 						{/* Search Bar */}
 						<div className="relative sm:w-64">
 							<Search

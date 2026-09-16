@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import type { trpc } from "@/utils/trpc";
 
 import "../index.css";
+import {env} from "@watch3r/env/web";
 
 export interface RouterAppContext {
   trpc: typeof trpc;
@@ -54,8 +55,10 @@ function RootComponent() {
         </div>
         <Toaster richColors />
       </ThemeProvider>
-      <TanStackRouterDevtools position="bottom-left" />
-      <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      {env.VITE_ENV === "development" && <>
+        <TanStackRouterDevtools position="bottom-left"/>
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right"/>
+      </>}
     </>
   );
 }

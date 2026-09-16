@@ -7,7 +7,7 @@ import {toast} from "sonner";
 import {ArrowLeft, Loader2, Upload} from "lucide-react";
 import {Button} from "@watch3r/ui/components/button";
 
-export const Route = createFileRoute('/_auth/watchlist/$watchlistId_/settings')({
+export const Route = createFileRoute('/_auth/watchlist/$watchlistId/settings')({
   loader: async ({params}) => {
     const watchlists = await queryClient.fetchQuery({
       ...trpc.watchlist.myWatchlists.queryOptions(),
@@ -72,6 +72,16 @@ function RouteComponent() {
               Manage your watchlist and how others see it.
             </p>
           </div>
+
+          {/* Title / Description */}
+          <section className="mt-8 rounded 2-xl border border-border bg-card p-6">
+            <h2 className="font-serif text-lg font-semibold">Title / Description</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              This is where you can add a title and description for your watchlist.
+            </p>
+
+
+          </section>
 
           {/* Cover */}
           <section className="mt-8 rounded-2xl border border-border bg-card p-6">
