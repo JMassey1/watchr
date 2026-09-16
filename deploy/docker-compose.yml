@@ -1,28 +1,12 @@
-# watch3r deploy stack (registry-image based, per-environment).
-#
-# This file is consumed by Portainer as a Git-based stack. It never builds
-# images — CI (.forgejo/workflows/deploy-test.yml) builds and pushes them to
-# the Forgejo container registry, and Portainer pulls them by tag.
-#
-# Everything environment-specific (ports, URLs, secrets, image tag) is supplied
-# via the Portainer stack's environment variables. See deploy/test.env.example
-# for the full list and the values for the `test` region.
-#
-# The same file serves any region: create one Portainer stack per environment
-# (test, prod, ...) each pointing at this path with its own env vars.
+# GitHub Actions publishes the production images and deploys this stack.
+# Runtime configuration is supplied from the production host's .env file.
 
-name: watch3r-${DEPLOY_ENV:-test}
+name: watch3r-${DEPLOY_ENV:-production}
 
 services:
-  # One-shot schema sync. Reuses the server image (which contains drizzle-kit,
-  # since the server Dockerfile does a full, unpruned `bun install`). Runs
-  # `drizzle-kit push` against Postgres, then exits. The server waits for this
-  # to complete successfully before starting.
-  #
-  # NOTE: push-based sync is intentional for the test region. Before a prod
-  # region, switch to `drizzle-kit generate` + a programmatic migrator.
+  # Apply the schema before the production server starts.
   migrate:
-    image: ${REGISTRY:-orbiter.taild7aa61.ts.net/jordan}/watch3r-server:${IMAGE_TAG:-test}
+    image: ${REGISTRY:-ghcr.io/jmassey1}/watch3r-server:${IMAGE_TAG:-production}
     working_dir: /app/packages/db
     command: ["bun", "run", "db:push"]
     environment:
@@ -33,11 +17,11 @@ services:
     restart: "no"
 
   server:
-    image: ${REGISTRY:-orbiter.taild7aa61.ts.net/jordan}/watch3r-server:${IMAGE_TAG:-test}
-    container_name: watch3r-${DEPLOY_ENV:-test}-server
+    image: ${REGISTRY:-ghcr.io/jmassey1}/watch3r-server:${IMAGE_TAG:-production}
+    container_name: watch3r-${DEPLOY_ENV:-production}-server
     init: true
     ports:
-      - "${SERVER_PORT:-13000}:3000"
+      - "127.0.0.1:${SERVER_PORT:-13000}:3000"
     environment:
       NODE_ENV: production
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required (min 32 chars)}
@@ -78,13 +62,12 @@ services:
     restart: unless-stopped
 
   web:
-    # VITE_SERVER_URL is baked into this image at build time by CI, so the web
-    # image is region-specific. There is nothing to configure here at runtime.
-    image: ${REGISTRY:-orbiter.taild7aa61.ts.net/jordan}/watch3r-web:${IMAGE_TAG:-test}
-    container_name: watch3r-${DEPLOY_ENV:-test}-web
+    # GitHub Actions bakes the production API URL into this image.
+    image: ${REGISTRY:-ghcr.io/jmassey1}/watch3r-web:${IMAGE_TAG:-production}
+    container_name: watch3r-${DEPLOY_ENV:-production}-web
     init: true
     ports:
-      - "${WEB_PORT:-13001}:80"
+      - "127.0.0.1:${WEB_PORT:-13001}:80"
     depends_on:
       server:
         condition: service_healthy
@@ -98,13 +81,13 @@ services:
 
   postgres:
     image: postgres:18
-    container_name: watch3r-${DEPLOY_ENV:-test}-postgres
+    container_name: watch3r-${DEPLOY_ENV:-production}-postgres
     environment:
       POSTGRES_DB: watch3r
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     ports:
-      - "${POSTGRES_PORT:-15432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-15432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
@@ -116,14 +99,14 @@ services:
 
   minio:
     image: minio/minio
-    container_name: watch3r-${DEPLOY_ENV:-test}-minio
+    container_name: watch3r-${DEPLOY_ENV:-production}-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     ports:
-      - "${MINIO_API_PORT:-19000}:9000"
-      - "${MINIO_CONSOLE_PORT:-19001}:9001"
+      - "127.0.0.1:${MINIO_API_PORT:-19000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-19001}:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -152,6 +135,6 @@ services:
 
 volumes:
   postgres_data:
-    name: watch3r_${DEPLOY_ENV:-test}_postgres_data
+    name: watch3r_${DEPLOY_ENV:-production}_postgres_data
   minio_data:
-    name: watch3r_${DEPLOY_ENV:-test}_minio_data
+    name: watch3r_${DEPLOY_ENV:-production}_minio_data

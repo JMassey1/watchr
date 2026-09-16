@@ -1,0 +1,76 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [production]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve image tags
+        id: image
+        shell: bash
+        run: echo "short_sha=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and publish server
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/jmassey1/watch3r-server:production
+            ghcr.io/jmassey1/watch3r-server:production-${{ steps.image.outputs.short_sha }}
+
+      - name: Build and publish web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          build-args: VITE_SERVER_URL=https://api.watchr.space
+          tags: |
+            ghcr.io/jmassey1/watch3r-web:production
+            ghcr.io/jmassey1/watch3r-web:production-${{ steps.image.outputs.short_sha }}
+
+      - name: Deploy production
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ vars.DROPLET_HOST }}
+          DEPLOY_USER: ${{ vars.DROPLET_USER }}
+          DEPLOY_PORT: ${{ vars.DROPLET_PORT || '22' }}
+          SSH_PRIVATE_KEY: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          touch "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts"
+          scp -P "$DEPLOY_PORT" -i "$HOME/.ssh/deploy_key" deploy/docker-compose.yml \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/watchr/docker-compose.yml"
+          ssh -p "$DEPLOY_PORT" -i "$HOME/.ssh/deploy_key" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            'cd /opt/watchr && docker compose --env-file .env pull && docker compose --env-file .env up -d --remove-orphans'
