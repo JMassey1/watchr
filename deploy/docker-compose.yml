@@ -98,7 +98,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio
     container_name: watch3r-${DEPLOY_ENV:-production}-minio
     command: server /data --console-address ":9001"
     environment:
@@ -118,7 +118,7 @@ services:
 
   # One-shot job: create the avatars and covers buckets and make them public-read.
   minio-setup:
-    image: minio/mc
+    image: quay.io/minio/mc
     depends_on:
       minio:
         condition: service_healthy
