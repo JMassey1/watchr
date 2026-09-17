@@ -1,17 +1,27 @@
 import {createFileRoute, Link} from "@tanstack/react-router";
-import {buttonVariants} from "@watch3r/ui/components/button";
+import {Button, buttonVariants} from "@watch3r/ui/components/button";
 
 import DvdCase from "@/components/dvd-case";
+import {authClient} from "@/lib/auth-client";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });
 
 function HomeComponent() {
+	const {data: session, isPending} = authClient.useSession();
+
 	return (
 		<main className="bg-background text-foreground">
 			<section className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[minmax(0,5fr)_minmax(38rem,7fr)] lg:gap-8">
 				<div className="max-w-xl">
+					<Button
+						onClick={() => console.log("session, pending", {session, isPending})}
+						variant="outline"
+						className={buttonVariants({size: "lg"})}
+					>
+						Log Session (DEBUG)
+					</Button>
 					<p className="mb-4 text-sm font-medium uppercase tracking-[0.18em] text-primary">
 						Your shelf, shared
 					</p>
@@ -22,13 +32,15 @@ function HomeComponent() {
 						Collect what you want to watch, share the list, and decide what comes next together.
 					</p>
 					<div className="mt-8 flex flex-wrap gap-3">
-						<Link
-							to="/login"
-							search={{mode: "sign-up"}}
-							className={buttonVariants({size: "lg"})}
-						>
-							Create account
-						</Link>
+						{!isPending && !session && (
+							<Link
+								to="/login"
+								search={{mode: "sign-up"}}
+								className={buttonVariants({size: "lg"})}
+							>
+								Create account
+							</Link>
+						)}
 						<Link
 							to="/dashboard"
 							className={buttonVariants({variant: "outline", size: "lg"})}
@@ -36,12 +48,9 @@ function HomeComponent() {
 							Open your dashboard
 						</Link>
 					</div>
-					<p className="mt-5 text-sm text-muted-foreground">
-						Click the case to open it.
-					</p>
 				</div>
 
-				<div className="flex min-h-[32rem] items-center justify-center px-4 py-12 sm:px-12 lg:justify-end lg:pl-64 lg:pr-12">
+				<div className="flex flex-col min-h-[32rem] items-center justify-center px-4 py-12 sm:px-12 lg:justify-end lg:pl-64 lg:pr-12">
 					<DvdCase
 						posterUrl="/frieren_cover_tmdb.png"
 						posterAlt="Frieren: Beyond Journey's End cover"
@@ -50,6 +59,9 @@ function HomeComponent() {
 						description="An elf mage retraces the road her fallen companions once walked."
 						metadata={["2023", "28 episodes"]}
 					/>
+					<p className="mt-5 text-sm text-muted-foreground">
+						Click the case to open it.
+					</p>
 				</div>
 			</section>
 

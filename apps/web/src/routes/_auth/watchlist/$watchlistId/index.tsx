@@ -441,8 +441,12 @@ function RouteComponent() {
 								: "This watchlist is empty. Add your first title to get watching."}
 						</p>
 						<Button onClick={() => setAddTitleOpen(true)} className="mt-4 gap-1.5">
-							<Plus className="size-4"/>
-							Add title
+							{itemQuery.trim() ? (
+								<Search className="size-4"/>
+							) : (
+								<Plus className="size-4"/>
+							)}
+							{itemQuery.trim() ? `Search for "${itemQuery.trim()}"` : "Add title"}
 						</Button>
 					</div>
 				)}
