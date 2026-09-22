@@ -15,13 +15,6 @@ function HomeComponent() {
 		<main className="bg-background text-foreground">
 			<section className="mx-auto grid w-full max-w-7xl items-center gap-12 px-6 py-16 md:px-10 md:py-24 lg:grid-cols-[minmax(0,5fr)_minmax(38rem,7fr)] lg:gap-8">
 				<div className="max-w-xl">
-					<Button
-						onClick={() => console.log("session, pending", {session, isPending})}
-						variant="outline"
-						className={buttonVariants({size: "lg"})}
-					>
-						Log Session (DEBUG)
-					</Button>
 					<p className="mb-4 text-sm font-medium uppercase tracking-[0.18em] text-primary">
 						Your shelf, shared
 					</p>
