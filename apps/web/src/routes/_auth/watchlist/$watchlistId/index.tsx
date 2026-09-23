@@ -1,4 +1,4 @@
-import {createFileRoute, Link, redirect} from '@tanstack/react-router'
+import {createFileRoute, Link} from '@tanstack/react-router'
 import {ReactNode, useMemo, useRef, useState} from "react";
 import {useMutation, useQuery, useSuspenseQuery} from "@tanstack/react-query";
 import {Button, buttonVariants} from "@watch3r/ui/components/button";
@@ -45,27 +45,9 @@ import {
 	ContextMenuTrigger
 } from "@watch3r/ui/components/context-menu";
 import {useUserLocalStorage} from "@/hooks/use-user-local-storage";
+import {Route as WatchlistRoute} from "./route";
 
-export const Route = createFileRoute('/_auth/watchlist/$watchlistId')({
-	loader: async ({params}) => {
-		const watchlists = await queryClient.fetchQuery({
-			...trpc.watchlist.myWatchlists.queryOptions(),
-			staleTime: 0,
-		});
-
-		const watchlist = watchlists.find((wl) => wl.id === parseInt(params.watchlistId));
-		if (!watchlist) {
-			throw redirect({
-				to: "/dashboard",
-				search: {
-					error: "watchlist-access-denied",
-				},
-				replace: true,
-			});
-		}
-
-		return {watchlist};
-	},
+export const Route = createFileRoute('/_auth/watchlist/$watchlistId/')({
 	component: RouteComponent,
 })
 
@@ -84,7 +66,7 @@ const ITEM_FILTERS: { key: ItemFilter; label: string }[] = [
 ];
 
 function RouteComponent() {
-	const {watchlist} = Route.useLoaderData();
+	const {watchlist} = WatchlistRoute.useLoaderData();
 	const {session} = Route.useRouteContext();
 	const user = session.user;
 	const {data: userSettings} = useSuspenseQuery(
@@ -459,8 +441,12 @@ function RouteComponent() {
 								: "This watchlist is empty. Add your first title to get watching."}
 						</p>
 						<Button onClick={() => setAddTitleOpen(true)} className="mt-4 gap-1.5">
-							<Plus className="size-4"/>
-							Add title
+							{itemQuery.trim() ? (
+								<Search className="size-4"/>
+							) : (
+								<Plus className="size-4"/>
+							)}
+							{itemQuery.trim() ? `Search for "${itemQuery.trim()}"` : "Add title"}
 						</Button>
 					</div>
 				)}

@@ -1,37 +1,19 @@
-import {createFileRoute, Link, redirect} from '@tanstack/react-router'
-import {queryClient, trpc} from "@/utils/trpc";
+import {createFileRoute, Link} from '@tanstack/react-router'
+import {trpc} from "@/utils/trpc";
 import {useRef} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {useCoverUpload} from "@/hooks/user-cover-upload";
 import {toast} from "sonner";
 import {ArrowLeft, Loader2, Upload} from "lucide-react";
 import {Button} from "@watch3r/ui/components/button";
+import {Route as WatchlistRoute} from "./route";
 
 export const Route = createFileRoute('/_auth/watchlist/$watchlistId/settings')({
-  loader: async ({params}) => {
-    const watchlists = await queryClient.fetchQuery({
-      ...trpc.watchlist.myWatchlists.queryOptions(),
-      staleTime: 0,
-    });
-
-    const watchlist = watchlists.find((wl) => wl.id === parseInt(params.watchlistId));
-    if (!watchlist) {
-      throw redirect({
-        to: "/dashboard",
-        search: {
-          error: "watchlist-access-denied",
-        },
-        replace: true,
-      })
-    }
-
-    return { watchlist };
-  },
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const { watchlist: initialWatchlist } = Route.useLoaderData();
+  const { watchlist: initialWatchlist } = WatchlistRoute.useLoaderData();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: watchlists } = useQuery(trpc.watchlist.myWatchlists.queryOptions());
