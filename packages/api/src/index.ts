@@ -1,11 +1,15 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
+import type { TRPCMeta } from "./meta";
 import type { Context } from "./context";
 
-export const t = initTRPC.context<Context>().create({
-  transformer: superjson,
-});
+export const t = initTRPC
+    .context<Context>()
+    .meta<TRPCMeta>()
+    .create({
+      transformer: superjson,
+    });
 
 export const router = t.router;
 
